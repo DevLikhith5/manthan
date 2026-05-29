@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manthan — talk to your codebase</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #f6f5f2;
+      --fg: #1c1c1a;
+      --dim: #6b6b63;
+      --muted: #a5a59d;
+      --accent: #c94b1e;
+      --line: #e3e1da;
+      --white: #ffffff;
+      --radius: 10px;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .w { max-width: 800px; margin: 0 auto; padding: 0 32px; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; height: 56px; border-bottom: 1px solid var(--line); }
+    .logo { font-weight: 700; font-size: 16px; color: var(--accent); }
+    .nav-r { display: flex; gap: 20px; }
+    .nav-r a { text-decoration: none; font-size: 14px; color: var(--dim); font-weight: 500; transition: color 0.15s; }
+    .nav-r a:hover { color: var(--fg); }
+
+    .hero { padding: 80px 0 56px; text-align: center; }
+    .hero h1 { font-size: clamp(52px, 9vw, 96px); font-weight: 800; line-height: 0.9; letter-spacing: -0.03em; margin-bottom: 16px; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { font-size: 16px; color: var(--dim); max-width: 480px; margin: 0 auto 32px; }
+
+    .s {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 18px; border-radius: var(--radius);
+      border: 1px solid var(--line); background: var(--white);
+      max-width: 560px; margin: 0 auto;
+    }
+    .s svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--muted); }
+    .s .c { font-size: 15px; color: var(--dim); min-height: 22px; position: relative; }
+    .s .c .cursor {
+      display: inline-block; width: 1.5px; height: 16px;
+      background: var(--accent); margin-left: 1px; vertical-align: text-bottom;
+      transition: opacity 0.2s;
+    }
+    .s .c .cursor.blink { animation: bl 0.9s step-end infinite; }
+    @keyframes bl { 50% { opacity: 0; } }
+
+    .demo { margin-top: 40px; text-align: left; min-height: 280px; }
+
+    .msg { display: flex; gap: 16px; padding: 22px 0; transition: opacity 0.5s ease, transform 0.5s ease; }
+    .msg + .msg { border-top: 1px solid var(--line); }
+
+    .msg.hidden { opacity: 0; transform: translateY(8px); pointer-events: none; }
+    .msg.visible { opacity: 1; transform: translateY(0); }
+
+    .av {
+      width: 34px; height: 34px; border-radius: 8px;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      margin-top: 2px;
+    }
+    .av.u { background: #f0ebe4; color: var(--accent); }
+    .av.a { background: var(--fg); color: var(--bg); }
+    .av svg { width: 20px; height: 20px; }
+
+    .b { flex: 1; font-size: 15px; color: var(--dim); line-height: 1.7; min-width: 0; word-break: break-word; overflow-wrap: break-word; }
+    .b strong { color: var(--fg); font-weight: 600; }
+    .b code {
+      padding: 0 4px; border-radius: 3px;
+      font-size: 13px; color: var(--accent);
+      word-break: break-all;
+    }
+
+    .refs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+    .refs a {
+      font-size: 11px; padding: 3px 9px; border-radius: 5px;
+      border: 1px solid var(--line); background: var(--white);
+      color: var(--muted); text-decoration: none; transition: 0.15s;
+    }
+    .refs a:hover { border-color: var(--accent); color: var(--accent); }
+
+    .try-btn-wrap { padding: 24px 0 0; text-align: right; }
+
+    section { padding: 48px 0; }
+    section + section { border-top: 1px solid var(--line); }
+
+    .st { font-weight: 700; font-size: 17px; margin-bottom: 18px; }
+
+    .fi { display: flex; gap: 16px; align-items: flex-start; padding: 16px 0; }
+    .fi + .fi { border-top: 1px solid var(--line); }
+    .fi svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--accent); margin-top: 3px; }
+    .fi h3 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .fi p { font-size: 14px; color: var(--dim); }
+
+    .stp { display: flex; gap: 18px; padding: 20px 0; }
+    .stp + .stp { border-top: 1px solid var(--line); }
+    .stp .num { font-size: 26px; font-weight: 800; color: var(--accent); line-height: 1; width: 30px; flex-shrink: 0; }
+    .stp h3 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .stp p { font-size: 14px; color: var(--dim); }
+
+    .cta-wrap {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+    }
+    .cta-wrap .st { margin-bottom: 8px; }
+    .cta-wrap .sub { font-size: 14px; color: var(--dim); margin-bottom: 20px; }
+
+    .code-box {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-radius: 8px;
+      background: var(--bg); border: 1px solid var(--line);
+      font-size: 13px; color: var(--dim);
+      gap: 14px; text-align: left;
+      font-family: "SF Mono", SFMono-Regular, ui-monospace, Consolas, monospace;
+    }
+    .code-box code { flex: 1; word-break: break-all; }
+    .code-box .cp {
+      border: none; background: none;
+      font-size: 12px; font-family: inherit;
+      color: var(--muted); cursor: pointer; white-space: nowrap;
+      font-weight: 500; transition: color 0.15s;
+    }
+    .code-box .cp:hover { color: var(--accent); }
+
+    .btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 22px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 11px 24px; border-radius: 8px;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      text-decoration: none; border: none; cursor: pointer; transition: 0.15s;
+    }
+    .btn-p { background: var(--accent); color: var(--white); }
+    .btn-p:hover { background: #b8431a; }
+    .btn-s { background: transparent; color: var(--dim); border: 1px solid var(--line); }
+    .btn-s:hover { border-color: var(--muted); color: var(--fg); }
+
+    footer {
+      border-top: 1px solid var(--line); padding: 28px 0;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; color: var(--muted); max-width: 800px; margin: 0 auto; padding-left: 32px; padding-right: 32px;
+    }
+    footer a { color: var(--dim); text-decoration: none; margin-left: 16px; }
+    footer a:hover { color: var(--fg); }
+
+    @media (max-width: 640px) {
+      .w { padding: 0 20px; }
+      .cta-wrap { padding: 24px 20px; }
+      .btn-row { flex-direction: column; }
+      .btn-row .btn { justify-content: center; }
+      footer { flex-direction: column; gap: 6px; text-align: center; padding-left: 20px; padding-right: 20px; }
+      footer a { margin: 0 8px; }
+      .code-box { flex-direction: column; align-items: stretch; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="w">
+  <div class="logo">Manthan</div>
+  <div class="nav-r">
+    <a href="#f">Features</a>
+    <a href="#h">How it works</a>
+    <a href="https://github.com" target="_blank">GitHub</a>
+  </div>
+</nav>
+
+<div class="w">
+  <div class="hero">
+    <h1><span>M</span>anthan</h1>
+    <p>Natural language search for your codebase. Ask in English, get answers with source citations — all local, all private.</p>
+
+    <div class="s">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+      </svg>
+      <span class="c" id="tw"><span id="twText"></span><span class="cursor blink" id="cursor"></span></span>
+    </div>
+
+    <div class="demo" id="demo">
+      <div class="msg visible" id="mq">
+        <div class="av u">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+        </div>
+        <div class="b" id="mqText">how does authentication work here?</div>
+      </div>
+      <div class="msg visible" id="ma">
+        <div class="av a">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+          </svg>
+        </div>
+        <div class="b" id="maBody">
+          Uses <strong>JWT-based authentication</strong> with access and refresh tokens. <code>AuthService.login()</code> validates credentials and issues tokens. <code>authGuard()</code> middleware verifies the JWT on every protected route.
+          <div class="refs">
+            <a href="#">src/auth/AuthService.ts:42</a>
+            <a href="#">src/auth/guards.ts:18</a>
+            <a href="#">src/config/auth.ts:7</a>
+          </div>
+        </div>
+      </div>
+      <div class="try-btn-wrap">
+        <a href="#" class="btn btn-p">Try it on your codebase</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section id="f">
+  <div class="w">
+    <div class="st">What it does</div>
+    <div class="fi">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></svg>
+      <div><h3>Semantic search</h3><p>Finds code by intent, not keywords. Understands what you mean without exact names.</p></div>
+    </div>
+    <div class="fi">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+      <div><h3>Local &amp; private</h3><p>Everything runs locally. Code never leaves your machine. No SaaS, no data leaks.</p></div>
+    </div>
+    <div class="fi">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75ZM14.25 8.625c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-8.25ZM3.75 16.125c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-2.25Z"/></svg>
+      <div><h3>Multi-repo</h3><p>Index and search across multiple repos. Monorepos, microservices — all work.</p></div>
+    </div>
+    <div class="fi">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>
+      <div><h3>Citation-backed answers</h3><p>Every answer includes exact file paths and line numbers. Click to open source.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="h">
+  <div class="w">
+    <div class="st">How it works</div>
+    <div class="stp"><div class="num">1</div><div><h3>Clone &amp; index</h3><p>Add a repo. Manthan clones it locally and builds a hybrid search index (embeddings + BM25).</p></div></div>
+    <div class="stp"><div class="num">2</div><div><h3>Ask in English</h3><p>Type questions like &quot;how does auth work&quot;. No regex, no query language — just plain English.</p></div></div>
+    <div class="stp"><div class="num">3</div><div><h3>Get answers with sources</h3><p>Synthesized answer with exact file paths and line numbers. Click any citation to open.</p></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="w">
+    <div class="cta-wrap">
+      <div class="st">Try it yourself</div>
+      <p class="sub">No Docker. No signup. Python + SQLite + React.</p>
+      <div class="code-box">
+        <code>git clone https://github.com/your/manthan.git && pip install -r requirements.txt && uvicorn app.main:app</code>
+        <button class="cp" onclick="copyCmd(this)" title="Copy command">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="16" height="16">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+          </svg>
+        </button>
+      </div>
+      <div class="btn-row">
+        <a href="#" class="btn btn-p">Get started</a>
+        <a href="#" class="btn btn-s">View on GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Manthan &mdash; talk to your codebase</span>
+  <span><a href="#">GitHub</a><a href="#">Docs</a></span>
+</footer>
+
+<script>
+  const DEMOS = [
+    {
+      query: 'how does authentication work here?',
+      answer: 'Uses <strong>JWT-based authentication</strong> with access and refresh tokens. <code>AuthService.login()</code> validates credentials and issues tokens. <code>authGuard()</code> middleware verifies the JWT on every protected route.',
+      refs: ['src/auth/AuthService.ts:42', 'src/auth/guards.ts:18', 'src/config/auth.ts:7']
+    },
+    {
+      query: 'find the rate limiter implementation',
+      answer: 'A <strong>Redis-backed sliding window</strong> in <code>RateLimiter.ts</code>. Tracks per-IP requests with <code>INCR</code> + <code>EXPIRE</code>, returns <code>429</code> when exceeded (default 100 req/min).',
+      refs: ['src/middleware/RateLimiter.ts:12', 'src/config/rate-limit.ts:5']
+    },
+    {
+      query: 'where are database migrations stored?',
+      answer: 'Migrations live in <code>db/migrations/</code> using <strong>Alembic</strong>. Each migration is timestamped. Run <code>alembic upgrade head</code> to apply. Config is in <code>alembic.ini</code> at project root.',
+      refs: ['db/migrations/001_initial.py:1', 'alembic.ini:3', 'db/migrations/002_users.py:1', 'pyproject.toml:15']
+    }
+  ];
+
+  const twText = document.getElementById('twText');
+  const cursor = document.getElementById('cursor');
+  const mq = document.getElementById('mq');
+  const ma = document.getElementById('ma');
+  const mqText = document.getElementById('mqText');
+  const maBody = document.getElementById('maBody');
+
+  let idx = 0, ci = 0, phase = 'type';
+
+  function setContent(i) {
+    const d = DEMOS[i];
+    mqText.textContent = d.query;
+    maBody.innerHTML = d.answer + '<div class="refs"></div>';
+    const r = maBody.querySelector('.refs');
+    d.refs.forEach(ref => {
+      const a = document.createElement('a');
+      a.href = '#';
+      a.textContent = ref;
+      r.appendChild(a);
+    });
+  }
+
+  function showMessages() {
+    mq.classList.remove('hidden');
+    mq.classList.add('visible');
+    ma.classList.remove('hidden');
+    ma.classList.add('visible');
+  }
+
+  function hideMessages() {
+    mq.classList.remove('visible');
+    mq.classList.add('hidden');
+    ma.classList.remove('visible');
+    ma.classList.add('hidden');
+  }
+
+  setContent(0);
+  showMessages();
+
+  /* 
+    Phase flow:
+    type    → type out query in search bar
+    hold    → query fully typed, messages showing, pause
+    clear   → delete search bar text + hide messages (simultaneous)
+    wait    → brief empty pause before next cycle
+  */
+
+  function loop() {
+    if (phase === 'type') {
+      const q = DEMOS[idx].query;
+      if (ci <= q.length) {
+        twText.textContent = q.slice(0, ci++);
+        cursor.className = ci > q.length ? 'cursor' : 'cursor blink';
+        setTimeout(loop, 35);
+      } else {
+        cursor.className = 'cursor blink';
+        phase = 'hold';
+        setTimeout(loop, 2200);
+      }
+    } else if (phase === 'hold') {
+      cursor.className = 'cursor';
+      phase = 'clear';
+      loop();
+    } else if (phase === 'clear') {
+      const q = DEMOS[idx].query;
+      if (ci >= 0) {
+        twText.textContent = q.slice(0, ci--);
+        if (ci === -1) hideMessages();
+        setTimeout(loop, 12);
+      } else {
+        phase = 'wait';
+        setTimeout(loop, 400);
+      }
+    } else if (phase === 'wait') {
+      idx = (idx + 1) % DEMOS.length;
+      ci = 0;
+      setContent(idx);
+      showMessages();
+      phase = 'type';
+      setTimeout(loop, 600);
+    }
+  }
+
+  loop();
+
+  function copyCmd(b) {
+    const t = b.parentElement.querySelector('code').textContent.trim();
+    const svg = b.querySelector('svg');
+    navigator.clipboard.writeText(t).then(() => {
+      const orig = b.innerHTML;
+      b.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>';
+      setTimeout(() => b.innerHTML = orig, 2000);
+    });
+  }
+</script>
+</body>
+</html>

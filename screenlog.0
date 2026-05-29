@@ -1,0 +1,639 @@
+[32mINFO[0m:     Started server process [[36m82550[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     127.0.0.1:55425 - "[1mGET /health HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:55427 - "[1mPOST /search HTTP/1.1[0m" [91m500 Internal Server Error[0m
+[31mERROR[0m:    Exception in ASGI application
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/uvicorn/protocols/http/httptools_impl.py", line 411, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        self.scope, self.receive, self.send
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/uvicorn/middleware/proxy_headers.py", line 69, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/applications.py", line 123, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/prometheus_fastapi_instrumentator/middleware.py", line 174, in __call__
+    raise exc
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/prometheus_fastapi_instrumentator/middleware.py", line 172, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/middleware/exceptions.py", line 65, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/routing.py", line 756, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/routing.py", line 776, in app
+    await route.handle(scope, receive, send)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/routing.py", line 297, in handle
+    await self.app(scope, receive, send)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/routing.py", line 77, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
+    raise exc
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/starlette/routing.py", line 72, in app
+    response = await func(request)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/fastapi/routing.py", line 278, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        dependant=dependant, values=values, is_coroutine=is_coroutine
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cvlikhith/Manthan/codesearch/api/app/routers/search.py", line 13, in search
+    result, citations, is_cached = await search_service(
+                                   ^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/Users/cvlikhith/Manthan/codesearch/api/app/service/search_service.py", line 20, in search
+    candidates = await hybrid_search(query, bm25, queries, final_k=50)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cvlikhith/Manthan/codesearch/api/app/adapter/retrieval/fusion.py", line 28, in hybrid_search
+    all_dense_results = await asyncio.gather(*tasks)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/cvlikhith/Manthan/codesearch/api/app/adapter/retrieval/dense.py", line 34, in dense_search
+    results = await qdrant.search(
+              ^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/qdrant_client/async_qdrant_client.py", line 321, in search
+    return await self._client.search(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<14 lines>...
+    )
+    ^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/qdrant_client/async_qdrant_remote.py", line 393, in search
+    search_result = await self.http.points_api.search_points(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<14 lines>...
+    )
+    ^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/qdrant_client/http/api/points_api.py", line 1039, in search_points
+    return await self._build_for_search_points(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/qdrant_client/http/api_client.py", line 148, in request
+    return await self.send(request, type_)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/site-packages/qdrant_client/http/api_client.py", line 171, in send
+    raise UnexpectedResponse.for_response(response)
+qdrant_client.http.exceptions.UnexpectedResponse: Unexpected Response: 404 (Not Found)
+Raw response content:
+b'{"status":{"error":"Not found: Collection `codebase` doesn\'t exist!"},"time":0.00019175}'
+[32mINFO[0m:     127.0.0.1:55513 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+config.json:   0%|                                    | 0.00/794 [00:00<?, ?B/s]config.json: 100%|██████████████████████████████| 794/794 [00:00<00:00, 408kB/s]
+model.safetensors:   0%|                            | 0.00/90.9M [00:00<?, ?B/s]model.safetensors: 100%|███████████████████| 90.9M/90.9M [00:25<00:00, 3.55MB/s]model.safetensors: 100%|███████████████████| 90.9M/90.9M [00:25<00:00, 3.54MB/s]
+tokenizer_config.json: 0.00B [00:00, ?B/s]tokenizer_config.json: 1.33kB [00:00, 2.60kB/s]
+[32mINFO[0m:     Started server process [[36m85476[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     127.0.0.1:56580 - "[1mGET /health HTTP/1.1[0m" [32m200 OK[0m
+vocab.txt: 0.00B [00:00, ?B/s]vocab.txt: 232kB [00:00, 745kB/s]vocab.txt: 232kB [00:00, 726kB/s]
+tokenizer.json: 0.00B [00:00, ?B/s]tokenizer.json: 711kB [00:00, 1.08MB/s]tokenizer.json: 711kB [00:00, 1.08MB/s]
+special_tokens_map.json:   0%|                        | 0.00/132 [00:00<?, ?B/s]special_tokens_map.json: 100%|█████████████████| 132/132 [00:00<00:00, 3.20kB/s]
+[32mINFO[0m:     127.0.0.1:56582 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+bash: line 1: /Users/cvlikhith/Manthan/codesearch/.venv/bin/activate: No such file or directory
+bash: line 1: /Users/cvlikhith/Manthan/codesearch/.venv/bin/activate: No such file or directory
+[32mINFO[0m:     Started server process [[36m87395[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     127.0.0.1:57048 - "[1mGET /health HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:57050 - "[1mGET / HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:57061 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:57104 - "[1mGET / HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:57111 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:57234 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:57556 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:57714 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:57832 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:57895 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:57955 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58116 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58185 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58264 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58407 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58414 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     Started server process [[36m97367[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     127.0.0.1:58514 - "[1mGET /health HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58516 - "[1mGET /repos HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58519 - "[1mGET / HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     Started server process [[36m98232[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     127.0.0.1:58626 - "[1mGET /health HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58628 - "[1mGET /repos HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58631 - "[1mGET / HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     Started server process [[36m202[0m]
+[32mINFO[0m:     Waiting for application startup.
+Loaded model: all-MiniLM-L6-v2 (dim=384)
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:8081[0m (Press CTRL+C to quit)
+[32mINFO[0m:     127.0.0.1:58822 - "[1mGET /health HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58845 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58847 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58845 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58849 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58847 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58851 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58849 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58853 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58847 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58849 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58940 - "[1mGET /repos HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58943 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     Started server process [[36m2122[0m]
+[32mINFO[0m:     Waiting for application startup.
+BM25 index file not found: /data/bm25.pkl
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     127.0.0.1:58963 - "[1mGET /health HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58965 - "[1mGET /repos HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58970 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58977 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58979 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58980 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58983 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58984 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58986 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58990 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58991 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58992 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:58993 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59013 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59014 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59017 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59018 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59024 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59026 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59027 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59028 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59029 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59030 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59008 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59042 - "[1mGET / HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59044 - "[1mGET /assets/index-B92b56Dk.js HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59050 - "[1mGET / HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59050 - "[1mGET /assets/index-B92b56Dk.js HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59053 - "[1mGET /assets/index-9xIM11N9.css HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59050 - "[1mGET /repos HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59061 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59091 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59092 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59093 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59096 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59097 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59101 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59102 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59103 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59104 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59105 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59083 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59150 - "[1mGET / HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59155 - "[1mGET / HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59157 - "[1mGET / HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59159 - "[1mGET /repos HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59162 - "[1mPOST /search HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59171 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59172 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59174 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59176 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59177 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59178 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59181 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59182 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59183 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59184 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59203 - "[1mGET /assets/index-B92b56Dk.js HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59205 - "[1mGET /assets/index-9xIM11N9.css HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     Started server process [[36m3407[0m]
+[32mINFO[0m:     Waiting for application startup.
+BM25 index file not found: /data/bm25.pkl
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     127.0.0.1:59238 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59239 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59240 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59243 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59248 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59250 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59251 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59252 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59253 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59254 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59326 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59327 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59330 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59332 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59338 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59339 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59340 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59341 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59342 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59343 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59471 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59477 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59479 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59480 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59481 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59482 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59483 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59484 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59485 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59486 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59581 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59584 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59585 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59588 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59589 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59592 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59593 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59595 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59596 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59597 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59629 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59630 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59631 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59633 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59634 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59637 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59640 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59641 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59642 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59643 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59723 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59724 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59730 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59733 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59734 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59735 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59736 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59737 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59738 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59739 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59784 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59787 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59788 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59789 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59794 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59795 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59798 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59799 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59800 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59801 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59826 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59827 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59829 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59832 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59833 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59835 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59837 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59840 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59841 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59843 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59871 - "[1mGET /health HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59923 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59925 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59923 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59924 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59925 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59926 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59924 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59923 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59927 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59925 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59926 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59928 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59923 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59927 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59929 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59925 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59926 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59931 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59926 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59923 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59929 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59931 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59925 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59933 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59929 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59926 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59935 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59925 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59931 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59937 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59935 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59926 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59939 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59931 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59925 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59941 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59939 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59935 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59943 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59935 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59941 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59931 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59945 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59943 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59939 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59947 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59935 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59941 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59949 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59939 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59943 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59951 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59949 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59935 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59953 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59951 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59939 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59955 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59949 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59935 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59957 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59939 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59951 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59959 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59957 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59949 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59961 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59959 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59939 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59963 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59957 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59961 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59965 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59963 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59959 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59967 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59957 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59961 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59969 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59959 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59963 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59971 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59969 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59957 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59973 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59963 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59959 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59976 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59973 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59969 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59978 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59963 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59959 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59980 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59969 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59973 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59982 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59963 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59980 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59984 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59982 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59969 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59986 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59969 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59980 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59963 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59988 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59986 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59982 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59990 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59986 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59988 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59980 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59992 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59982 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59994 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59990 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59986 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59996 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59994 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59982 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59998 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59986 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59990 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60000 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59982 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59998 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60002 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59990 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60000 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60004 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59982 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60006 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60000 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60008 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59982 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59998 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60000 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60008 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59998 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60010 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60000 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60012 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60010 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:59982 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60014 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60016 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60012 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60000 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60016 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60012 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60016 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60012 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60000 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60012 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60000 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60019 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60012 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60234 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60241 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60243 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60244 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60245 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60246 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60247 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60248 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60249 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60250 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60429 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60433 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60435 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60436 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60437 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60440 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60443 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60444 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60445 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60446 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60776 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60785 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60786 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60787 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60788 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60789 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60790 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60791 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60792 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:60793 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61137 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61138 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61139 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61142 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61145 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61146 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61149 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61150 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61151 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61152 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61194 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61195 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61196 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61197 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61198 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61199 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61200 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61201 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61202 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61203 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61240 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61241 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61247 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61248 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61250 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61251 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61252 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61253 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61254 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61255 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61297 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61298 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61301 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61302 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61307 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61308 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61311 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61312 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61313 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61314 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61359 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61361 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61362 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61365 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61368 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61369 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61372 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61373 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61374 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61375 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61415 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61416 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61418 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61424 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61425 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61427 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61429 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61430 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61431 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61432 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61489 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61492 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61496 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61498 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61501 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61502 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61503 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61504 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61505 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61506 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61540 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61541 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61542 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61543 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61544 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61547 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61550 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61552 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61553 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61554 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61600 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61601 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61602 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61603 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61606 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61607 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61612 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61614 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61615 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61616 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61743 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:61743 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:63582 - "[1mGET /health HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64117 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64122 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64123 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64127 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64128 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64129 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64130 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64131 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64132 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64133 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64147 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64148 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64196 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64199 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64200 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64201 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64252 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64253 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64336 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64338 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64339 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64340 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64385 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64388 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64389 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64390 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64428 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64429 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64458 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64459 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64475 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64476 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64501 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m
+[32mINFO[0m:     127.0.0.1:64502 - "[1mPOST /embed HTTP/1.1[0m" [32m200 OK[0m

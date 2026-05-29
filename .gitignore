@@ -1,0 +1,52 @@
+# Build plan (personal reference, not for repo)
+BUILD_PLAN.md
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Go
+ingestion/indexer
+ingestion/*.exe
+*.exe
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Frontend build
+frontend/dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# BM25 index data
+*.pkl
+
+# Qdrant storage (local)
+qdrant_storage/
+code_search_project.md
