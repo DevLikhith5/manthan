@@ -1,0 +1,45 @@
+{
+  "title": "CodeSearch - RAG Metrics",
+  "panels": [
+    {
+      "title": "E2E Query Latency (p95)",
+      "type": "heatmap",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(rag_query_e2e_seconds_bucket[5m])) by (le))"
+        }
+      ]
+    },
+    {
+      "title": "Cache Hit Rate",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(rag_cache_hits_total[5m]) / (rate(rag_cache_hits_total[5m]) + rate(rag_cache_misses_total[5m])) * 100"
+        }
+      ]
+    },
+    {
+      "title": "Index Size (Vectors)",
+      "type": "gauge",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rag_index_size_total"
+        }
+      ]
+    },
+    {
+      "title": "Retrieval Latency (p95)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(rag_retrieval_seconds_bucket[5m])) by (le))"
+        }
+      ]
+    }
+  ]
+}

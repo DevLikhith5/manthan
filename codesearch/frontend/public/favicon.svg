@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .b { fill: #1c1917; }
+    .f { fill: #e7e5e4; }
+    @media (prefers-color-scheme: light) {
+      .b { fill: #e7e5e4; }
+      .f { fill: #1c1917; }
+    }
+  </style>
+  <rect class="b" width="32" height="32" rx="6"/>
+  <text class="f" x="16" y="22" font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text',system-ui,sans-serif" font-size="18" font-weight="600" text-anchor="middle">M</text>
+</svg>

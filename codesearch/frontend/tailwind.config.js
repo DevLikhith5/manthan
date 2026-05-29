@@ -1,0 +1,62 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Outfit', 'system-ui', 'sans-serif'],
+      },
+      colors: {
+        stone: {
+          50: '#fafafc',
+          100: '#f0f0f4',
+          150: '#e8e8ee',
+          200: '#dcdce2',
+          250: '#c8c8d0',
+          300: '#a8a8b2',
+          400: '#80808a',
+          500: '#6a6a74',
+          600: '#4a4a52',
+          650: '#3a3a42',
+          700: '#2a2a32',
+          750: '#222228',
+          800: '#1a1a20',
+          850: '#141418',
+          900: '#0e0e12',
+          950: '#0a0a0d',
+        },
+        accent: {
+          50: '#f2f2f7',
+          100: '#e0e0eb',
+          200: '#c4c4d9',
+          300: '#9d9db8',
+          400: '#7a7a9a',
+          500: '#5c5c7a',
+          600: '#42425c',
+          700: '#303046',
+          800: '#202033',
+          900: '#14141f',
+        },
+        primary: {
+          50: '#e8e8ee',
+          100: '#d0d0dc',
+          200: '#a0a0b8',
+          300: '#707095',
+          400: '#505072',
+          500: '#3a3a54',
+          600: '#2e2e44',
+          700: '#222234',
+          800: '#181826',
+          900: '#0e0e18',
+        },
+      },
+      boxShadow: {
+        'sharp': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        'sharp-md': '0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.04)',
+        'sharp-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+      },
+    },
+  },
+  plugins: [],
+}

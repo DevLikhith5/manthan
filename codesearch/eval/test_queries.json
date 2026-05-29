@@ -1,0 +1,72 @@
+[
+  {
+    "query": "How does WAL work in Kasoku",
+    "expected_files": ["internal/store/wal.go"],
+    "difficulty": "medium"
+  },
+  {
+    "query": "How is bloom filter implemented in Kasoku",
+    "expected_files": ["internal/store/lsm/bloom.go"],
+    "difficulty": "medium"
+  },
+  {
+    "query": "How does LSM tree compaction work",
+    "expected_files": ["internal/store/lsm/lsm.go"],
+    "difficulty": "hard"
+  },
+  {
+    "query": "How does the hash ring work in the web UI",
+    "expected_files": ["web/src/lib/hashRing.ts"],
+    "difficulty": "easy"
+  },
+  {
+    "query": "How is circuit breaker implemented for RPC calls",
+    "expected_files": ["internal/rpc/circuit_breaker.go"],
+    "difficulty": "medium"
+  },
+  {
+    "query": "How does TTL expiry work for keys",
+    "expected_files": ["internal/ttl/manager.go"],
+    "difficulty": "medium"
+  },
+  {
+    "query": "How is data replicated across nodes",
+    "expected_files": ["internal/rpc/grpc/server.go", "internal/rpc/batch.go"],
+    "difficulty": "hard"
+  },
+  {
+    "query": "How does the gRPC server handle Put and Get requests",
+    "expected_files": ["internal/rpc/grpc/server.go"],
+    "difficulty": "medium"
+  },
+  {
+    "query": "How is the MemTable implemented for LSM tree",
+    "expected_files": ["internal/store/lsm/memtable.go"],
+    "difficulty": "medium"
+  },
+  {
+    "query": "How are SSTables read from disk",
+    "expected_files": ["internal/store/lsm/sstable.go"],
+    "difficulty": "hard"
+  },
+  {
+    "query": "How does SkipList work as an in-memory index",
+    "expected_files": ["internal/store/lsm/skiplist.go"],
+    "difficulty": "medium"
+  },
+  {
+    "query": "How is anti-entropy/gossip implemented for cluster membership",
+    "expected_files": ["internal/cluster/node.go"],
+    "difficulty": "hard"
+  },
+  {
+    "query": "How does key caching work in the LSM engine",
+    "expected_files": ["internal/store/lsm/key_cache.go"],
+    "difficulty": "easy"
+  },
+  {
+    "query": "How does vector clock conflict resolution work",
+    "expected_files": ["internal/store/engine.go"],
+    "difficulty": "hard"
+  }
+]

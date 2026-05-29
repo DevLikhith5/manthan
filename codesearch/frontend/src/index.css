@@ -1,0 +1,278 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  ::selection {
+    @apply bg-stone-300/40 dark:bg-stone-600/40;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.stone.300 / 0.6') transparent;
+  }
+
+  .dark * {
+    scrollbar-color: theme('colors.stone.700 / 0.6') transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: theme('colors.stone.300 / 0.6');
+    border-radius: 3px;
+  }
+
+  .dark *::-webkit-scrollbar-thumb {
+    background-color: theme('colors.stone.700 / 0.6');
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: theme('colors.stone.400 / 0.8');
+  }
+
+  .dark *::-webkit-scrollbar-thumb:hover {
+    background-color: theme('colors.stone.600 / 0.8');
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+@layer components {
+  .search-input {
+    @apply w-full px-6 py-5 text-[16px] bg-white dark:bg-stone-850 border border-stone-200 dark:border-stone-700 rounded-2xl outline-none transition-all duration-200 ease-out;
+  }
+
+  .search-input:focus {
+    @apply border-stone-300 dark:border-stone-600;
+    box-shadow: 0 0 0 3px rgba(120, 120, 128, 0.08), 0 1px 2px rgba(0, 0, 0, 0.02);
+  }
+
+  .dark .search-input:focus {
+    box-shadow: 0 0 0 3px rgba(120, 120, 128, 0.12), 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .search-input::placeholder {
+    @apply text-stone-300 dark:text-stone-500 transition-colors duration-200;
+  }
+
+  .search-input:focus::placeholder {
+    @apply text-stone-250 dark:text-stone-400;
+  }
+
+  .search-input:disabled {
+    @apply opacity-60;
+  }
+
+  .chat-message {
+    @apply rounded-xl px-5 py-3 max-w-[85%] lg:max-w-[80%] leading-relaxed text-[15px];
+  }
+
+  .chat-message.user {
+    @apply bg-stone-800 dark:bg-stone-700 text-white ml-auto;
+  }
+
+  .chat-message.assistant {
+    @apply bg-transparent mr-auto text-stone-600 dark:text-stone-300;
+  }
+
+  .citation-card {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm bg-white dark:bg-stone-850 rounded-lg border border-stone-150 dark:border-stone-750 transition-all duration-150 cursor-pointer;
+  }
+
+  .citation-card:hover {
+    @apply border-stone-300 dark:border-stone-500 bg-stone-50 dark:bg-stone-800;
+  }
+
+  .citation-card:active {
+    transform: scale(0.97);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-2.5 py-1.5 text-sm text-stone-400 dark:text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-lg transition-all duration-150;
+  }
+
+  .btn-ghost:active {
+    transform: scale(0.96);
+  }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor-blink::after {
+  content: '▊';
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUpSm {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out both;
+}
+
+.animate-slide-up-sm {
+  animation: slideUpSm 0.25s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out both;
+}
+
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-left {
+  animation: slideLeft 0.25s ease-out both;
+}
+
+@keyframes pulse-dot {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.loading-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.loading-dots span {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-dot 1.2s ease-in-out infinite both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.36s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.18s; }
+.loading-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes headerShadow {
+  from { box-shadow: none; }
+  to { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); }
+}
+
+.dark .header-shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.header-shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(320px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(320px);
+  }
+}
+
+.sources-panel-wrapper {
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sources-panel-wrapper.open {
+  width: 320px;
+  animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sources-panel-wrapper.closed {
+  width: 0;
+  animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.9); }
+  50% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out both;
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(168, 168, 178, 0.08), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.dark .animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(168, 168, 178, 0.04), transparent);
+  background-size: 200% 100%;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.2s ease-out both;
+}

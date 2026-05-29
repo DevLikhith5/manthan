@@ -1,0 +1,111 @@
+version: '3.9'
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.9.0
+    ports:
+      - '6333:6333'
+      - '6334:6334'
+    volumes:
+      - qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:6333/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+
+  embedding-service:
+    build: ./embedding-service
+    ports:
+      - '8081:8081'
+    environment:
+      MODEL_NAME: all-MiniLM-L6-v2
+      PORT: 8081
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8081/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  ingestion:
+    build: ./ingestion
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      embedding-service:
+        condition: service_healthy
+    environment:
+      QDRANT_URL: 'qdrant:6334'
+      REDIS_URL: 'redis://redis:6379'
+      EMBEDDING_SERVICE_URL: 'http://embedding-service:8081'
+      REPO_PATH: '/repos/target'
+      WORKER_COUNT: '8'
+      EMBEDDING_MODEL: 'all-MiniLM-L6-v2'
+      POLL_INTERVAL_SEC: '30'
+    volumes:
+      - './repos:/repos'
+
+  api:
+    build: ./api
+    ports:
+      - '8000:8000'
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      embedding-service:
+        condition: service_healthy
+    environment:
+      QDRANT_URL: 'http://qdrant:6333'
+      REDIS_URL: 'redis://redis:6379'
+      EMBEDDING_MODEL: 'all-MiniLM-L6-v2'
+      EMBEDDING_SERVICE_URL: 'http://embedding-service:8081'
+      GROQ_API_KEY: '${GROQ_API_KEY}'
+      RERANKER_MODEL: 'cross-encoder/ms-marco-MiniLM-L-6-v2'
+      BM25_INDEX_PATH: '/data/bm25.pkl'
+    volumes:
+      - bm25_data:/data
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    ports:
+      - '9090:9090'
+    volumes:
+      - './infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml'
+      - prometheus_data:/prometheus
+    depends_on:
+      - api
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    ports:
+      - '3000:3000'
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - 'grafana_data:/var/lib/grafana'
+    depends_on:
+      - prometheus
+
+volumes:
+  qdrant_data:
+  redis_data:
+  bm25_data:
+  prometheus_data:
+  grafana_data:
