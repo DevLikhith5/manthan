@@ -1,74 +1,52 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
-API_PORT=8000
-FRONTEND_PORT=5173
-EMBED_PORT=8081
+cd "$(dirname "$0")"
 
-stop_all() {
-  echo "Stopping all processes..."
-  pkill -f "uvicorn app.main:app" 2>/dev/null || true
-  pkill -f "vite" 2>/dev/null || true
-  pkill -f indexer 2>/dev/null || true
-  sleep 1
-  echo "All stopped"
-}
-
-start_all() {
-  echo "Loading environment variables..."
-  [ -f "$ROOT/.env" ] && set -a && source "$ROOT/.env" && set +a
-
-  echo "Starting embedding service..."
-  cd "$ROOT/embedding-service"
-  screen -dmS embed bash -c "python3 -m uvicorn main:app --host 0.0.0.0 --port $EMBED_PORT"
-  sleep 2
-
-  echo "Starting API..."
-  cd "$ROOT/api"
-  export GROQ_API_KEY="${GROQ_API_KEY:-}"
-  export INDEXER_PATH=/tmp/indexer
-  export HOST_REPO_PATH=$ROOT/repos/target
-  screen -dmS api bash -c "python3 -m uvicorn app.main:app --host 0.0.0.0 --port $API_PORT"
-  sleep 3
-
-  echo "Starting frontend..."
-  cd "$ROOT/frontend"
-  screen -dmS frontend bash -c "npm run dev"
-  sleep 2
-
-  echo ""
-  echo "================================="
-  echo " All services running"
-  echo "================================="
-  echo " Frontend  : http://localhost:$FRONTEND_PORT"
-  echo " API       : http://localhost:$API_PORT"
-  echo " Embedding : http://localhost:$EMBED_PORT"
-  echo ""
-  echo " Stop with: ./run.sh stop"
-  echo "================================="
-}
-
-reset_collection() {
-  echo "Deleting Qdrant collection 'codebase'..."
-  curl -s -X DELETE "http://localhost:6333/collections/codebase" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('status','error'))"
-  echo "Done. Re-add your repo from the UI."
-}
-
-case "${1:-}" in
-  stop)
-    stop_all
+case "${1:-up}" in
+  up)
+    echo ">>> Building images..."
+    docker compose build
+    echo ">>> Launching all services..."
+    docker compose --env-file .env up -d
+    echo ">>> Waiting for API... (slow imports ~60s)"
+    for i in $(seq 1 30); do
+      if curl -sf http://localhost:8000/api/health >/dev/null 2>&1; then
+        echo ">>> API ready! http://localhost:8000"
+        exit 0
+      fi
+      sleep 2
+    done
+    echo "Timed out waiting for API"
+    exit 1
     ;;
-  reset)
-    stop_all
-    reset_collection
+  down)
+    docker compose down
     ;;
-  restart)
-    stop_all
-    sleep 1
-    start_all
+  logs)
+    shift
+    docker compose logs -f "$@"
+    ;;
+  search)
+    shift
+    curl -s -N -X POST http://localhost:8000/api/search \
+      -H 'Content-Type: application/json' \
+      -d "$(jo query="${1:-how does WAL work}" top_k=5)"
+    ;;
+  health)
+    curl -s http://localhost:8000/api/health | python3 -m json.tool
+    ;;
+  ps)
+    docker compose ps
+    ;;
+  rebuild)
+    shift
+    for svc in "$@"; do
+      docker compose build --no-cache "$svc"
+    done
+    docker compose up -d "$@"
     ;;
   *)
-    start_all
+    echo "Usage: $0 [up|down|logs|search|health|ps|rebuild]"
     ;;
 esac

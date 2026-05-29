@@ -65,10 +65,6 @@ MULTI_QUERY_PROMPT = """Generate 3 different search queries for finding relevant
 
 Original query: {query}"""
 
-HYDE_PROMPT = """Write a short, realistic code snippet that would be the answer to this query. Include a function signature and docstring. Write it as if it were real production code.
-
-Query: {query}"""
-
 async def expand_query(query: str) -> list[str]:
     corrected = query
 
@@ -90,19 +86,9 @@ async def expand_query(query: str) -> list[str]:
         )
         return json.loads(msg.choices[0].message.content)
 
-    async def hyde(c: AsyncGroq):
-        msg = await c.chat.completions.create(
-            model=settings.groq_model,
-            messages=[{'role': 'user', 'content': HYDE_PROMPT.format(query=corrected)}],
-            temperature=0.2,
-            max_tokens=300,
-        )
-        return msg.choices[0].message.content
-
-    fix, v, h = await asyncio.gather(
+    fix, v = await asyncio.gather(
         _cached_call(fix_typos, query, 'typo'),
         _cached_call(variations, query, 'variations'),
-        _cached_call(hyde, query, 'hyde'),
     )
     if fix and fix.lower() != query.lower() and len(fix) > 3:
         corrected = fix
@@ -110,8 +96,6 @@ async def expand_query(query: str) -> list[str]:
     results = [corrected]
     if v:
         results.extend(v)
-    if h:
-        results.append(h)
     return results
 
 

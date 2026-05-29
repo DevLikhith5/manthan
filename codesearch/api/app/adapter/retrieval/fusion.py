@@ -19,7 +19,7 @@ async def hybrid_search(
     queries: list[str],
     k_dense: int = 50,
     k_sparse: int = 50,
-    final_k: int = 50,
+    final_k: int = 20,
     repo: str | None = None,
 ) -> list[CodeChunk]:
     start = time.perf_counter()

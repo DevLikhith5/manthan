@@ -67,11 +67,12 @@ async def ingest(body: IngestRequest):
     task_id = f'ingest_{safe_repo}'
 
     def run_indexing():
-        clone_dir = tempfile.mkdtemp(prefix=f'{safe_repo}_')
-        target_dir = os.path.join(repos_dir, safe_repo)
         logs = []
         lock = threading.Lock()
-        done_event = threading.Event()
+        tasks[task_id] = {'status': 'starting', 'repo': repo_name, 'logs': logs, 'lock': lock, 'done': False}
+
+        clone_dir = tempfile.mkdtemp(prefix=f'{safe_repo}_')
+        target_dir = os.path.join(repos_dir, safe_repo)
 
         def log_line(line: str):
             with lock:
@@ -99,13 +100,17 @@ async def ingest(body: IngestRequest):
                 }
                 return
         except subprocess.TimeoutExpired:
-            proc.kill()
-            reader.join()
+            try: proc.kill()
+            except: pass
+            try: reader.join()
+            except: pass
             tasks[task_id] = {'status': 'failed', 'error': 'Clone timed out', 'repo': repo_name, 'logs': logs, 'done': True}
             return
         except Exception as e:
-            proc.kill()
-            reader.join()
+            try: proc.kill()
+            except: pass
+            try: reader.join()
+            except: pass
             tasks[task_id] = {'status': 'failed', 'error': str(e), 'repo': repo_name, 'logs': logs, 'done': True}
             return
 
@@ -161,12 +166,16 @@ async def ingest(body: IngestRequest):
                 'logs': logs, 'done': True,
             }
         except subprocess.TimeoutExpired:
-            proc.kill()
-            reader.join()
+            try: proc.kill()
+            except: pass
+            try: reader.join()
+            except: pass
             tasks[task_id] = {'status': 'failed', 'error': 'Indexing timed out', 'repo': repo_name, 'logs': logs, 'done': True}
         except Exception as e:
-            proc.kill()
-            reader.join()
+            try: proc.kill()
+            except: pass
+            try: reader.join()
+            except: pass
             tasks[task_id] = {'status': 'failed', 'error': str(e), 'repo': repo_name, 'logs': logs, 'done': True}
 
     thread = threading.Thread(target=run_indexing)
@@ -178,7 +187,9 @@ async def ingest(body: IngestRequest):
 async def get_ingest_status(task_id: str):
     if task_id not in tasks:
         return {'status': 'not_found'}
-    return tasks[task_id]
+    t = tasks[task_id].copy()
+    t.pop('lock', None)
+    return t
 
 @router.get('/ingest/{task_id}/logs/stream')
 async def ingest_log_stream(task_id: str):

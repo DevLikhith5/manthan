@@ -15,6 +15,10 @@ def get_repo_path(repo_name: str) -> str | None:
     path = os.path.join(repos_dir, repo_name)
     if os.path.exists(path):
         return path
+    if settings.host_repo_path:
+        path = os.path.join(settings.host_repo_path, repo_name)
+        if os.path.exists(path):
+            return path
     return None
 
 async def search(query: str, bm25, language: str | None = None, top_k: int = 8, repo: str | None = None):
@@ -40,20 +44,17 @@ async def search(query: str, bm25, language: str | None = None, top_k: int = 8, 
     yield {'type': 'progress', 'data': 'Reranking results...'}
     top_chunks = await rerank(corrected, candidates, top_k=top_k)
 
-    # Build citations for UI and LLM context separately.
-    # LLM gets ALL reranked chunks so it can ground its answer.
-    # UI citations are filtered by whether the file exists locally for the "Open in editor" link.
+    # Build citations for UI.
     citations = []
     for c in top_chunks:
         repo_path = get_repo_path(c.repo) if c.repo else None
         base_path = repo_path or settings.host_repo_path or ''
-        base_path = base_path.replace('/repos/target', '')
-        clean_file_path = c.file_path.replace('/repos/target', '')
-        full_path = os.path.join(base_path, clean_file_path) if base_path else clean_file_path
+        full_path = os.path.join(base_path, c.file_path) if base_path else c.file_path
         if os.path.exists(full_path):
+            vscode_path = os.path.join(settings.vscode_path_prefix, c.repo, c.file_path) if settings.vscode_path_prefix and c.repo else full_path
             citations.append({
-                'file': full_path,
-                'path': clean_file_path,
+                'file': vscode_path,
+                'path': c.file_path,
                 'function': c.function_name,
                 'start_line': c.start_line,
                 'end_line': c.end_line,

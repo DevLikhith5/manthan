@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     query_cache_ttl: int = 3600
     vector_dim: int = 384
     host_repo_path: str = ''
+    host_repo_path_docker: str = ''
+    vscode_path_prefix: str = ''
 
     rate_limit_per_minute: int = 30
     rate_limit_burst: int = 50

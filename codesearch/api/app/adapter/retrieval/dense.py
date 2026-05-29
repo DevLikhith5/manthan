@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 qdrant = AsyncQdrantClient(settings.qdrant_url)
 _http_client = httpx.AsyncClient(timeout=60.0)
 _embed_cb = CircuitBreaker(name='embedding', failure_threshold=5, recovery_timeout=30.0)
-_embed_sem = asyncio.Semaphore(2)
+_embed_sem = asyncio.Semaphore(4)
 
 async def _do_embed(text: str) -> list[float]:
     async with _embed_sem:

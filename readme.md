@@ -178,89 +178,81 @@ graph LR
   - Free tier includes sufficient quota for development and testing
   - Set via environment variable `GROQ_API_KEY`
 
-## Installation and Setup
+## Quick Start
 
-### 1. Clone Repository
+### Prerequisites
+
+- Docker Desktop 20.10+ (with at least 4GB memory allocated)
+- A Groq API key from https://console.groq.com
+
+### 1. Environment
+
+Create a `.env` file in `codesearch/.env`:
 
 ```bash
-git clone https://github.com/your-org/manthan.git
-cd manthan
+GROQ_API_KEY=gsk_your_key_here
+# Optional additional keys for higher rate limits:
+# GROQ_API_KEY_2=gsk_your_key_2
+# GROQ_API_KEY_3=gsk_your_key_3
 ```
 
-### 2. Environment Configuration
-
-Create a `.env` file in the project root:
+### 2. Build
 
 ```bash
-# LLM Configuration
-GROQ_API_KEY=your_groq_api_key_here
-
-# Service Configuration
-LOG_LEVEL=INFO
-DEBUG=false
-
-# Embedding Model
-MODEL_NAME=all-MiniLM-L6-v2
-
-# Vector Database
-QDRANT_HOST=qdrant
-QDRANT_PORT=6334
-
-# Redis
-REDIS_HOST=redis
-REDIS_PORT=6379
-REDIS_DB=0
-
-# API
-API_HOST=0.0.0.0
-API_PORT=8000
-
-# Frontend
-VITE_API_URL=http://localhost:8000
-```
-
-### 3. Build Services
-
-```bash
-# Build all Docker images
+cd codesearch
 docker compose build
-
-# Or build specific services
-docker compose build ingestion embedding-service api
 ```
 
-### 4. Initialize Services
+### 3. Launch
 
 ```bash
-# Start all services
-docker compose up -d
-
-# Verify all services are healthy
-docker compose ps
-
-# Check logs for any errors
-docker compose logs -f
+docker compose --env-file .env up -d
 ```
 
-Expected output should show:
-- `qdrant` service running on port 6333
-- `redis` service running on port 6379
-- `embedding-service` running on port 8081
-- `api` running on port 8000
-- `frontend` available at http://localhost:5173 (development)
+All 8 services will start. Initial startup takes ~60s (model downloads, slow imports).
 
-### 5. Verify Installation
+### 4. Verify
 
 ```bash
-# Health check
 curl http://localhost:8000/api/health
-
-# Should return:
-# {"status":"healthy","services":{"qdrant":"ok","redis":"ok","embedding":"ok"}}
-
-# Check available repositories
-curl http://localhost:8000/api/repos
+# {"status":"ok","service":"codesearch-api"}
 ```
+
+### Quick Search
+
+```bash
+curl -X POST http://localhost:8000/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"how does WAL work"}'
+```
+
+### Ingesting a Repository
+
+Clone a repo into `codesearch/repos/target/`:
+
+```bash
+cd codesearch/repos/target
+git clone git@github.com:your-org/your-repo.git
+```
+
+Restart the ingestion service in ONESHOT mode:
+
+```bash
+docker compose restart ingestion
+```
+
+For incremental indexing (watches for file changes), remove `ONESHOT: 'true'` from `docker-compose.yml` and restart.
+
+### Service Endpoints
+
+| Service | URL |
+|---------|-----|
+| Frontend UI | http://localhost:80 |
+| API | http://localhost:8000 |
+| Embedding Service | http://localhost:8081 |
+| Qdrant Dashboard | http://localhost:6333/dashboard |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3000 (admin/admin) |
 
 ## Configuration
 
