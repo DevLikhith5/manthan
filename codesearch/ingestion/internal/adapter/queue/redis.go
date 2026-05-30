@@ -56,9 +56,12 @@ func (q *RedisQueue) Consume(ctx context.Context, count int) ([]StreamJob, error
 		Consumer: fmt.Sprintf("worker-%d", count),
 		Streams:  []string{q.queueName, ">"},
 		Count:    int64(count),
-		Block:    0,
+		Block:    -1,
 	}).Result()
 	if err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
 		return nil, fmt.Errorf("xreadgroup: %w", err)
 	}
 

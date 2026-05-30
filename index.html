@@ -172,7 +172,7 @@
   <div class="nav-r">
     <a href="#f">Features</a>
     <a href="#h">How it works</a>
-    <a href="https://github.com" target="_blank">GitHub</a>
+    <a href="https://github.com/DevLikhith5/manthan" target="_blank">GitHub</a>
   </div>
 </nav>
 
@@ -195,7 +195,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
           </svg>
         </div>
-        <div class="b" id="mqText">how does authentication work here?</div>
+        <div class="b" id="mqText">how does hybrid search work here?</div>
       </div>
       <div class="msg visible" id="ma">
         <div class="av a">
@@ -204,11 +204,11 @@
           </svg>
         </div>
         <div class="b" id="maBody">
-          Uses <strong>JWT-based authentication</strong> with access and refresh tokens. <code>AuthService.login()</code> validates credentials and issues tokens. <code>authGuard()</code> middleware verifies the JWT on every protected route.
+          Combines <strong>dense vector search</strong> (Qdrant + sentence-transformers) with <strong>BM25 sparse retrieval</strong> using Reciprocal Rank Fusion. <code>hybrid_search()</code> merges results from both paths, applies exact-match boosting, and computes a confidence score based on score gaps and evidence diversity.
           <div class="refs">
-            <a href="#">src/auth/AuthService.ts:42</a>
-            <a href="#">src/auth/guards.ts:18</a>
-            <a href="#">src/config/auth.ts:7</a>
+            <a href="#">codesearch/api/app/adapter/retrieval/fusion.py:205</a>
+            <a href="#">codesearch/api/app/adapter/retrieval/fusion.py:163</a>
+            <a href="#">codesearch/api/app/adapter/retrieval/sparse.py:8</a>
           </div>
         </div>
       </div>
@@ -256,7 +256,7 @@
       <div class="st">Try it yourself</div>
       <p class="sub">No Docker. No signup. Python + SQLite + React.</p>
       <div class="code-box">
-        <code>git clone https://github.com/your/manthan.git && pip install -r requirements.txt && uvicorn app.main:app</code>
+        <code>git clone https://github.com/DevLikhith5/manthan.git && cd codesearch && docker compose up -d</code>
         <button class="cp" onclick="copyCmd(this)" title="Copy command">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="16" height="16">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
@@ -273,25 +273,25 @@
 
 <footer>
   <span>Manthan &mdash; talk to your codebase</span>
-  <span><a href="#">GitHub</a><a href="#">Docs</a></span>
+  <span><a href="https://github.com/DevLikhith5/manthan">GitHub</a><a href="#">Docs</a></span>
 </footer>
 
 <script>
   const DEMOS = [
     {
-      query: 'how does authentication work here?',
-      answer: 'Uses <strong>JWT-based authentication</strong> with access and refresh tokens. <code>AuthService.login()</code> validates credentials and issues tokens. <code>authGuard()</code> middleware verifies the JWT on every protected route.',
-      refs: ['src/auth/AuthService.ts:42', 'src/auth/guards.ts:18', 'src/config/auth.ts:7']
+      query: 'how does hybrid search work here?',
+      answer: 'Combines <strong>dense vector search</strong> (Qdrant + sentence-transformers) with <strong>BM25 sparse retrieval</strong> using Reciprocal Rank Fusion. <code>hybrid_search()</code> merges results from both paths, applies exact-match boosting, and computes a confidence score based on score gaps and evidence diversity.',
+      refs: ['codesearch/api/app/adapter/retrieval/fusion.py:205', 'codesearch/api/app/adapter/retrieval/fusion.py:163', 'codesearch/api/app/adapter/retrieval/sparse.py:8']
     },
     {
       query: 'find the rate limiter implementation',
-      answer: 'A <strong>Redis-backed sliding window</strong> in <code>RateLimiter.ts</code>. Tracks per-IP requests with <code>INCR</code> + <code>EXPIRE</code>, returns <code>429</code> when exceeded (default 100 req/min).',
-      refs: ['src/middleware/RateLimiter.ts:12', 'src/config/rate-limit.ts:5']
+      answer: 'A <strong>token-bucket rate limiter</strong> in <code>rate_limiter.py</code>. <code>PerClientRateLimiter</code> maintains one <code>TokenBucket</code> per client key, refilling tokens at a configurable rate. Default limit is 120 req/min with burst of 200, set in <code>config.py</code>.',
+      refs: ['codesearch/api/app/infra/rate_limiter.py:28', 'codesearch/api/app/infra/rate_limiter.py:8', 'codesearch/api/app/config.py:27']
     },
     {
-      query: 'where are database migrations stored?',
-      answer: 'Migrations live in <code>db/migrations/</code> using <strong>Alembic</strong>. Each migration is timestamped. Run <code>alembic upgrade head</code> to apply. Config is in <code>alembic.ini</code> at project root.',
-      refs: ['db/migrations/001_initial.py:1', 'alembic.ini:3', 'db/migrations/002_users.py:1', 'pyproject.toml:15']
+      query: 'how does citation verification work?',
+      answer: '<code>_verify_citations()</code> cross-references every <code>[file:line]</code> citation in the LLM answer against the actual retrieved chunks. If any citation can\'t be validated, a warning is appended listing only verified sources.',
+      refs: ['codesearch/api/app/service/search_service.py:154', 'codesearch/api/app/service/search_service.py:258', 'codesearch/api/app/domain/entities.py:3']
     }
   ];
 

@@ -37,7 +37,6 @@ func (e *goExtractor) walk(node *sitter.Node, parentType string, chunks *[]Chunk
 func (e *goExtractor) extractFunction(node *sitter.Node, parentType string, imports []string) *Chunk {
 	name := e.childText(node, "identifier")
 	if name == "" {
-		// method_declaration has field_identifier
 		name = e.childText(node, "field_identifier")
 	}
 	if name == "" {
@@ -56,8 +55,11 @@ func (e *goExtractor) extractFunction(node *sitter.Node, parentType string, impo
 	parentClass := ""
 	if parentType == "type_declaration" {
 		kind = "method"
-		parentClass = parentType
+		parentClass = e.findReceiverType(node)
 	}
+
+	calls := e.extractCallSites(node)
+	isExported := len(name) > 0 && name[0] >= 'A' && name[0] <= 'Z'
 
 	return &Chunk{
 		Content:     fullText,
@@ -72,6 +74,8 @@ func (e *goExtractor) extractFunction(node *sitter.Node, parentType string, impo
 		StartLine:   int(node.StartPoint().Row) + 1,
 		EndLine:     int(node.EndPoint().Row) + 1,
 		Imports:     imports,
+		Calls:       calls,
+		IsExported:  isExported,
 	}
 }
 
@@ -87,18 +91,22 @@ func (e *goExtractor) extractType(node *sitter.Node, imports []string) *Chunk {
 		"docs: " + docstring,
 	}, "\n")
 
+	extends := e.extractEmbeddedTypes(node)
+
 	return &Chunk{
-		Content:   fullText,
-		EmbedText: embedText,
-		Signature: "type " + name,
-		Docstring: docstring,
-		Name:      name,
-		Kind:      "struct",
-		FilePath:  e.filePath,
-		Language:  "go",
-		StartLine: int(node.StartPoint().Row) + 1,
-		EndLine:   int(node.EndPoint().Row) + 1,
-		Imports:   imports,
+		Content:    fullText,
+		EmbedText:  embedText,
+		Signature:  "type " + name,
+		Docstring:  docstring,
+		Name:       name,
+		Kind:       "struct",
+		FilePath:   e.filePath,
+		Language:   "go",
+		StartLine:  int(node.StartPoint().Row) + 1,
+		EndLine:    int(node.EndPoint().Row) + 1,
+		Imports:    imports,
+		Extends:    extends,
+		IsExported: len(name) > 0 && name[0] >= 'A' && name[0] <= 'Z',
 	}
 }
 
@@ -119,6 +127,101 @@ func (e *goExtractor) extractImports(root *sitter.Node) []string {
 		}
 	}
 	return imports
+}
+
+func (e *goExtractor) findReceiverType(node *sitter.Node) string {
+	for i := 0; i < int(node.ChildCount()); i++ {
+		child := node.Child(i)
+		if child.Type() == "parameter_list" {
+			for j := 0; j < int(child.ChildCount()); j++ {
+				param := child.Child(j)
+				if param.Type() == "parameter_declaration" {
+					typeNode := param.ChildByFieldName("type")
+					if typeNode != nil {
+						text := string(e.source[typeNode.StartByte():typeNode.EndByte()])
+						text = strings.TrimPrefix(text, "*")
+						return text
+					}
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func (e *goExtractor) extractEmbeddedTypes(node *sitter.Node) string {
+	for i := 0; i < int(node.ChildCount()); i++ {
+		child := node.Child(i)
+		if child.Type() == "type_declaration" {
+			for j := 0; j < int(child.ChildCount()); j++ {
+				inner := child.Child(j)
+				if inner.Type() == "struct_type" {
+					for k := 0; k < int(inner.ChildCount()); k++ {
+						field := inner.Child(k)
+						if field.Type() == "field_declaration_list" {
+							for l := 0; l < int(field.ChildCount()); l++ {
+								f := field.Child(l)
+								if f.Type() == "field_declaration" {
+									typeNode := f.ChildByFieldName("type")
+									if typeNode != nil {
+										text := string(e.source[typeNode.StartByte():typeNode.EndByte()])
+										text = strings.TrimPrefix(text, "*")
+										return text
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func (e *goExtractor) extractCallSites(node *sitter.Node) []CallSite {
+	var calls []CallSite
+	e.walkForCalls(node, &calls)
+	return calls
+}
+
+func (e *goExtractor) walkForCalls(node *sitter.Node, calls *[]CallSite) {
+	if node.Type() == "function_declaration" || node.Type() == "method_declaration" {
+		for i := 0; i < int(node.ChildCount()); i++ {
+			child := node.Child(i)
+			if child.Type() == "block" {
+				e.walkForCalls(child, calls)
+			}
+		}
+		return
+	}
+
+	if node.Type() == "call_expression" {
+		name := ""
+		qualifier := ""
+		if node.ChildCount() > 0 {
+			callee := node.Child(0)
+			if callee.Type() == "identifier" {
+				name = string(e.source[callee.StartByte():callee.EndByte()])
+			} else if callee.Type() == "selector_expression" {
+				if callee.ChildCount() >= 2 {
+					qualifier = string(e.source[callee.Child(0).StartByte():callee.Child(0).EndByte()])
+					name = string(e.source[callee.Child(1).StartByte():callee.Child(1).EndByte()])
+				}
+			}
+		}
+		if name != "" {
+			*calls = append(*calls, CallSite{
+				Name:      name,
+				Qualifier: qualifier,
+				Line:      int(node.StartPoint().Row) + 1,
+			})
+		}
+	}
+
+	for i := 0; i < int(node.ChildCount()); i++ {
+		e.walkForCalls(node.Child(i), calls)
+	}
 }
 
 func (e *goExtractor) extractSignature(fullText string) string {

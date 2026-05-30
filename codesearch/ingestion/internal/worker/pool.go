@@ -3,7 +3,9 @@ package worker
 import (
 	"context"
 	"log/slog"
+	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/cvlikhith/codesearch/ingestion/internal/adapter/queue"
 	"github.com/cvlikhith/codesearch/ingestion/internal/service"
@@ -18,6 +20,8 @@ type Pool struct {
 	completed    atomic.Int64
 	doneCh       chan struct{}
 	progressCh   chan struct{}
+	closeOnce    sync.Once
+	cancel       context.CancelFunc
 }
 
 func NewPool(
@@ -37,6 +41,9 @@ func NewPool(
 
 func (p *Pool) SetTotalJobs(n int) {
 	p.totalJobs.Store(int64(n))
+	if n == 0 {
+		p.closeOnce.Do(func() { close(p.doneCh) })
+	}
 }
 
 func (p *Pool) Done() <-chan struct{} {
@@ -48,11 +55,17 @@ func (p *Pool) Completed() int64 {
 }
 
 func (p *Pool) Run(ctx context.Context) {
+	ctx, cancel := context.WithCancel(ctx)
+	p.cancel = cancel
 	for i := 0; i < p.numWorkers; i++ {
 		go p.runWorker(ctx, i)
 	}
 
-	<-ctx.Done()
+	select {
+	case <-ctx.Done():
+	case <-p.doneCh:
+		cancel()
+	}
 }
 
 func (p *Pool) runWorker(ctx context.Context, workerID int) {
@@ -73,6 +86,12 @@ func (p *Pool) runWorker(ctx context.Context, workerID int) {
 				return
 			}
 			logger.Error("consume error", "error", err)
+			time.Sleep(time.Second)
+			continue
+		}
+
+		if len(jobs) == 0 {
+			time.Sleep(500 * time.Millisecond)
 			continue
 		}
 
@@ -99,7 +118,7 @@ func (p *Pool) runWorker(ctx context.Context, workerID int) {
 			if total := p.totalJobs.Load(); total > 0 {
 				done := p.completed.Add(1)
 				if done >= total {
-					close(p.doneCh)
+					p.closeOnce.Do(func() { close(p.doneCh) })
 					return
 				}
 			}

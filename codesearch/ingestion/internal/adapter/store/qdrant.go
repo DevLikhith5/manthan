@@ -11,14 +11,13 @@ import (
 	"github.com/cvlikhith/codesearch/ingestion/internal/domain"
 )
 
-const collectionName = "codebase"
-
 type QdrantStore struct {
 	client pb.PointsClient
 	coll   pb.CollectionsClient
+	collectionName string
 }
 
-func NewQdrant(url string) (*QdrantStore, error) {
+func NewQdrant(url, collectionName string) (*QdrantStore, error) {
 	conn, err := grpc.NewClient(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, fmt.Errorf("grpc dial: %w", err)
@@ -26,11 +25,12 @@ func NewQdrant(url string) (*QdrantStore, error) {
 	return &QdrantStore{
 		client: pb.NewPointsClient(conn),
 		coll:   pb.NewCollectionsClient(conn),
+		collectionName: collectionName,
 	}, nil
 }
 
 func (q *QdrantStore) EnsureCollection(ctx context.Context, dim int) error {
-	_, err := q.coll.Get(ctx, &pb.GetCollectionInfoRequest{CollectionName: collectionName})
+	_, err := q.coll.Get(ctx, &pb.GetCollectionInfoRequest{CollectionName: q.collectionName})
 	if err == nil {
 		return nil
 	}
@@ -39,7 +39,7 @@ func (q *QdrantStore) EnsureCollection(ctx context.Context, dim int) error {
 	alwaysRam := true
 
 	_, err = q.coll.Create(ctx, &pb.CreateCollection{
-		CollectionName: collectionName,
+		CollectionName: q.collectionName,
 		VectorsConfig: &pb.VectorsConfig{
 			Config: &pb.VectorsConfig_ParamsMap{
 				ParamsMap: &pb.VectorParamsMap{
@@ -110,7 +110,7 @@ func (q *QdrantStore) Upsert(ctx context.Context, chunks []domain.Chunk) error {
 
 	wait := true
 	_, err := q.client.Upsert(ctx, &pb.UpsertPoints{
-		CollectionName: collectionName,
+		CollectionName: q.collectionName,
 		Points:         points,
 		Wait:           &wait,
 	})
@@ -119,7 +119,7 @@ func (q *QdrantStore) Upsert(ctx context.Context, chunks []domain.Chunk) error {
 
 func (q *QdrantStore) Delete(ctx context.Context, filePath string) error {
 	_, err := q.client.Delete(ctx, &pb.DeletePoints{
-		CollectionName: collectionName,
+		CollectionName: q.collectionName,
 		Points: &pb.PointsSelector{
 			PointsSelectorOneOf: &pb.PointsSelector_Filter{
 				Filter: &pb.Filter{

@@ -28,3 +28,21 @@ CACHE_HITS = Counter('rag_cache_hits_total', 'Cache hits', ['cache_type'])
 CACHE_MISSES = Counter('rag_cache_misses_total', 'Cache misses', ['cache_type'])
 INDEX_SIZE = Gauge('rag_index_size_total', 'Vectors in Qdrant index')
 QUERY_COUNT = Counter('rag_queries_total', 'Total queries', ['status'])
+
+RETRIEVAL_CANDIDATE_COUNT = Histogram(
+    'rag_retrieval_candidates',
+    'Candidates produced before rerank',
+    buckets=[1, 5, 10, 20, 40, 80, 160],
+)
+
+RETRIEVAL_EXPANSION_COUNT = Histogram(
+    'rag_retrieval_expansion_count',
+    'Number of expansion queries used',
+    buckets=[0, 1, 2, 3, 5, 8],
+)
+
+RETRIEVAL_DEDUPE_RATIO = Histogram(
+    'rag_retrieval_dedupe_ratio',
+    'Deduped/ordered candidate ratio',
+    buckets=[0.1, 0.25, 0.5, 0.75, 0.9, 1.0],
+)

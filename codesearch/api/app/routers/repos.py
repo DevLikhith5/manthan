@@ -9,7 +9,7 @@ qdrant = AsyncQdrantClient(settings.qdrant_url)
 async def list_repos():
     try:
         points, _ = await qdrant.scroll(
-            collection_name='codebase',
+            collection_name=settings.qdrant_collection_name,
             limit=100,
             with_payload=True,
             with_vectors=False,

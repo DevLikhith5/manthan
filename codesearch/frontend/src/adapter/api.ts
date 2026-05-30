@@ -1,10 +1,12 @@
 import type { StreamEvent } from '../domain/types'
 
-export async function* searchStream(query: string, repo?: string): AsyncGenerator<StreamEvent> {
+type ChatTurn = { role: 'user' | 'assistant'; content: string }
+
+export async function* searchStream(query: string, repo?: string, history: ChatTurn[] = []): AsyncGenerator<StreamEvent> {
   const response = await fetch('/api/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, top_k: 8, repo }),
+    body: JSON.stringify({ query, top_k: 8, repo, history }),
   })
 
   if (!response.ok) {

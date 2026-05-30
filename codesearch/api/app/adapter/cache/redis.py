@@ -14,9 +14,9 @@ class QueryCache(CachePort):
             self.client = await redis.from_url(settings.redis_url, decode_responses=True)
         return self.client
 
-    def _key(self, query: str) -> str:
-        h = hashlib.md5(query.encode()).hexdigest()
-        return f'query:{h}'
+    def _key(self, cache_key: str) -> str:
+        h = hashlib.md5(cache_key.encode()).hexdigest()
+        return f'query:{settings.cache_schema_version}:{h}'
 
     async def get(self, key: str) -> dict | None:
         r = await self._get_client()

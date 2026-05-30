@@ -39,6 +39,7 @@ async def search(request: Request, body: SearchRequest):
             language=body.language,
             top_k=body.top_k,
             repo=body.repo,
+            history=[h.model_dump() for h in body.history] if body.history else None,
         ):
             yield f'data: {json.dumps(event)}\n\n'
 

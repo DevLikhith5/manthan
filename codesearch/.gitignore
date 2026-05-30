@@ -8,6 +8,7 @@ LAUNCH_CHECKLIST.md
 .env.*.local
 
 # Go
+GRAPH_PLAN.md
 ingestion/indexer
 ingestion/*.exe
 *.exe

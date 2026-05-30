@@ -2,7 +2,7 @@ import { useReducer, useCallback, useRef, useEffect, useMemo } from 'react'
 import type { ChatMessage, ChatSession, Citation, SearchState } from '../domain/types'
 import { searchStream } from '../adapter/api'
 
-export type Tab = 'search' | 'repos'
+export type Tab = 'search' | 'repos' | 'wiki'
 
 type State = {
   sessions: ChatSession[]
@@ -10,6 +10,11 @@ type State = {
   messages: ChatMessage[]
   status: SearchState
   progress: string | null
+  retrievalConfidence: number | null
+  answerMode: 'high_confidence' | 'low_confidence' | null
+  confidenceReason: string[]
+  sourceBreakdown: Record<string, number> | null
+  queryIntent: string | null
   expandedQueries: string[]
   searchedFiles: string[]
   error: string | null
@@ -30,6 +35,7 @@ type Action =
   | { type: 'LINK_REPO'; repo: string }
   | { type: 'START_SEARCH' }
   | { type: 'SET_PROGRESS'; progress: string | null }
+  | { type: 'SET_META'; confidence: number | null; answerMode: 'high_confidence' | 'low_confidence' | null; reasons: string[]; sourceBreakdown: Record<string, number> | null; queryIntent: string | null }
   | { type: 'SET_EXPANDED_QUERIES'; queries: string[] }
   | { type: 'ADD_SEARCHED_FILE'; file: string }
   | { type: 'CLEAR_SEARCHED_FILES' }
@@ -83,10 +89,13 @@ function reducer(state: State, action: Action): State {
       return { ...state, selectedRepo: action.repo }
 
     case 'START_SEARCH':
-      return { ...state, status: 'loading', error: null, progress: 'Expanding query...', expandedQueries: [], searchedFiles: [] }
+      return { ...state, status: 'loading', error: null, progress: 'Expanding query...', expandedQueries: [], searchedFiles: [], retrievalConfidence: null, answerMode: null, confidenceReason: [], sourceBreakdown: null }
 
     case 'SET_PROGRESS':
       return { ...state, progress: action.progress }
+
+    case 'SET_META':
+      return { ...state, retrievalConfidence: action.confidence, answerMode: action.answerMode, confidenceReason: action.reasons, sourceBreakdown: action.sourceBreakdown, queryIntent: action.queryIntent }
 
     case 'SET_EXPANDED_QUERIES':
       return { ...state, expandedQueries: action.queries }
@@ -118,7 +127,7 @@ function reducer(state: State, action: Action): State {
         searchedFiles: [
           ...new Set([
             ...state.searchedFiles,
-            ...action.citations.map(c => c.file.split('/').pop() || c.file),
+            ...action.citations.map(c => (c.path || c.file).split('/').pop() || c.path || c.file),
           ]),
         ],
         status: 'streaming',
@@ -168,11 +177,16 @@ const INITIAL: State = {
   messages: [],
   status: 'idle',
   progress: null,
+  retrievalConfidence: null,
+  answerMode: null,
+  confidenceReason: [],
   expandedQueries: [],
   searchedFiles: [],
   error: null,
   selectedRepo: null,
   tab: 'repos',
+  sourceBreakdown: null,
+  queryIntent: null,
   loaded: false,
 }
 
@@ -225,6 +239,7 @@ export function useChatStore() {
         const session = await api<any>(`/api/sessions/${state.currentId}`)
         if (cancelled) return
         const messages = (session.messages || []).map(sessionToMessage)
+        dispatch({ type: 'SELECT_REPO', repo: session.repo || null })
         dispatch({ type: 'RESTORE', messages, status: messages.length ? 'done' : 'idle' })
       } catch {}
     })()
@@ -280,7 +295,8 @@ export function useChatStore() {
     const controller = new AbortController()
     abortRef.current = controller
 
-    const sessionId = await ensureSession()
+    const effectiveRepo = repo ?? state.selectedRepo ?? null
+    const sessionId = await ensureSession(effectiveRepo)
 
     const isNewSession = !state.sessions.find(s => s.id === sessionId)
     if (isNewSession) {
@@ -303,7 +319,12 @@ export function useChatStore() {
     dispatch({ type: 'START_SEARCH' })
 
     try {
-      for await (const event of searchStream(query, repo || undefined)) {
+      const history = messagesRef.current
+        .filter(m => (m.role === 'user' || m.role === 'assistant') && !!m.content?.trim())
+        .slice(-8)
+        .map(m => ({ role: m.role, content: m.content }))
+
+      for await (const event of searchStream(query, effectiveRepo || undefined, history)) {
         if (controller.signal.aborted) break
 
         if (event.type === 'error') {
@@ -319,6 +340,18 @@ export function useChatStore() {
           dispatch({ type: 'SET_PROGRESS', progress: event.data as string })
           const match = (event.data as string).match(/^(?:Searching|Scanning|Reading)\s+(.+)/i)
           if (match) dispatch({ type: 'ADD_SEARCHED_FILE', file: match[1] })
+        }
+
+        if (event.type === 'meta') {
+          const meta = (event.data || {}) as any
+          dispatch({
+            type: 'SET_META',
+            confidence: typeof meta.retrieval_confidence === 'number' ? meta.retrieval_confidence : null,
+            answerMode: (meta.answer_mode as 'high_confidence' | 'low_confidence' | null) || null,
+            reasons: Array.isArray(meta.confidence_reason) ? meta.confidence_reason : [],
+            sourceBreakdown: typeof meta.source_breakdown === 'object' && meta.source_breakdown !== null ? meta.source_breakdown : null,
+            queryIntent: typeof meta.query_intent === 'string' ? meta.query_intent : null,
+          })
         }
 
         if (event.type === 'citations') {
@@ -343,14 +376,16 @@ export function useChatStore() {
         dispatch({ type: 'SET_ERROR', error: (err as Error).message })
       }
     }
-  }, [ensureSession])
+  }, [ensureSession, state.selectedRepo])
 
   const switchSession = useCallback(async (id: string) => {
     if (id === currentIdRef.current) return
     abortRef.current?.abort()
+    const sess = state.sessions.find(s => s.id === id)
+    dispatch({ type: 'SELECT_REPO', repo: (sess as any)?.repo || null })
     localStorage.setItem('manthan-current-session', id)
     dispatch({ type: 'SET_CURRENT', id })
-  }, [])
+  }, [state.sessions])
 
   const newChat = useCallback(async (repo?: string | null) => {
     abortRef.current?.abort()

@@ -33,6 +33,14 @@ func (e *pyExtractor) walk(node *sitter.Node, parentClass string, chunks *[]Chun
 			}
 			return
 		}
+	case "decorated_definition":
+		for i := 0; i < int(node.ChildCount()); i++ {
+			child := node.Child(i)
+			if child.Type() == "function_definition" || child.Type() == "class_definition" {
+				e.walk(child, parentClass, chunks, imports)
+			}
+		}
+		return
 	}
 	for i := 0; i < int(node.ChildCount()); i++ {
 		e.walk(node.Child(i), parentClass, chunks, imports)
@@ -59,6 +67,10 @@ func (e *pyExtractor) extractFunction(node *sitter.Node, parentClass string, imp
 		kind = "method"
 	}
 
+	calls := e.extractCallSites(node)
+	decorators := e.extractDecorators(node)
+	isExported := len(name) > 0 && name[0] != '_'
+
 	return &Chunk{
 		Content:     fullText,
 		EmbedText:   embedText,
@@ -72,6 +84,9 @@ func (e *pyExtractor) extractFunction(node *sitter.Node, parentClass string, imp
 		StartLine:   int(node.StartPoint().Row) + 1,
 		EndLine:     int(node.EndPoint().Row) + 1,
 		Imports:     imports,
+		Calls:       calls,
+		Decorators:  decorators,
+		IsExported:  isExported,
 	}
 }
 
@@ -88,18 +103,24 @@ func (e *pyExtractor) extractClass(node *sitter.Node, imports []string) *Chunk {
 		embedText += "\ndocs: " + docstring
 	}
 
+	extends := e.extractClassBases(node)
+	decorators := e.extractDecorators(node)
+
 	return &Chunk{
-		Content:   fullText,
-		EmbedText: embedText,
-		Signature: "class " + name,
-		Docstring: docstring,
-		Name:      name,
-		Kind:      "class",
-		FilePath:  e.filePath,
-		Language:  "python",
-		StartLine: int(node.StartPoint().Row) + 1,
-		EndLine:   int(node.EndPoint().Row) + 1,
-		Imports:   imports,
+		Content:    fullText,
+		EmbedText:  embedText,
+		Signature:  "class " + name,
+		Docstring:  docstring,
+		Name:       name,
+		Kind:       "class",
+		FilePath:   e.filePath,
+		Language:   "python",
+		StartLine:  int(node.StartPoint().Row) + 1,
+		EndLine:    int(node.EndPoint().Row) + 1,
+		Imports:    imports,
+		Extends:    extends,
+		Decorators: decorators,
+		IsExported: len(name) > 0 && name[0] != '_',
 	}
 }
 
@@ -117,6 +138,90 @@ func (e *pyExtractor) extractImports(root *sitter.Node) []string {
 		}
 	}
 	return imports
+}
+
+func (e *pyExtractor) extractCallSites(node *sitter.Node) []CallSite {
+	var calls []CallSite
+	e.walkForCalls(node, &calls)
+	return calls
+}
+
+func (e *pyExtractor) walkForCalls(node *sitter.Node, calls *[]CallSite) {
+	if node.Type() == "function_definition" {
+		body := node.ChildByFieldName("body")
+		if body != nil {
+			e.walkForCalls(body, calls)
+		}
+		return
+	}
+
+	if node.Type() == "call" {
+		name := ""
+		qualifier := ""
+		if node.ChildCount() > 0 {
+			callee := node.Child(0)
+			if callee.Type() == "identifier" {
+				name = string(e.source[callee.StartByte():callee.EndByte()])
+			} else if callee.Type() == "attribute" {
+				count := int(callee.ChildCount())
+				if count >= 2 {
+					qualifier = string(e.source[callee.Child(0).StartByte():callee.Child(0).EndByte()])
+					name = string(e.source[callee.Child(count-1).StartByte():callee.Child(count-1).EndByte()])
+				}
+			}
+		}
+		if name != "" {
+			*calls = append(*calls, CallSite{
+				Name:      name,
+				Qualifier: qualifier,
+				Line:      int(node.StartPoint().Row) + 1,
+			})
+		}
+	}
+
+	for i := 0; i < int(node.ChildCount()); i++ {
+		e.walkForCalls(node.Child(i), calls)
+	}
+}
+
+func (e *pyExtractor) extractClassBases(node *sitter.Node) string {
+	for i := 0; i < int(node.ChildCount()); i++ {
+		child := node.Child(i)
+		if child.Type() == "argument_list" {
+			if child.ChildCount() > 0 {
+				first := child.Child(0)
+				if first.Type() == "identifier" || first.Type() == "attribute" {
+					return string(e.source[first.StartByte():first.EndByte()])
+				}
+			}
+		}
+	}
+	return ""
+}
+
+func (e *pyExtractor) extractDecorators(node *sitter.Node) []Decorator {
+	var decs []Decorator
+	parent := node.Parent()
+	if parent == nil || parent.Type() != "decorated_definition" {
+		return decs
+	}
+	for i := 0; i < int(parent.ChildCount()); i++ {
+		child := parent.Child(i)
+		if child.Type() == "decorator" {
+			name := ""
+			for j := 0; j < int(child.ChildCount()); j++ {
+				inner := child.Child(j)
+				if inner.Type() == "identifier" || inner.Type() == "dotted_name" {
+					name = string(e.source[inner.StartByte():inner.EndByte()])
+					break
+				}
+			}
+			if name != "" {
+				decs = append(decs, Decorator{Name: name})
+			}
+		}
+	}
+	return decs
 }
 
 func (e *pyExtractor) extractSignature(fullText string) string {

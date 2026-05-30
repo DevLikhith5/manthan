@@ -1,0 +1,16 @@
+[
+  {
+    "query": "start explaining backlog service",
+    "expected_files": [
+      "services/project-orchestrator/src/service_clients.py",
+      "services/sprint-service/k8s/utils.py"
+    ]
+  },
+  {
+    "query": "how backlog service get tasks is called",
+    "expected_files": [
+      "services/sprint-service/k8s/utils.py",
+      "services/sprint-service/src/utils.py"
+    ]
+  }
+]

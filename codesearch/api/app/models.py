@@ -1,10 +1,16 @@
 from pydantic import BaseModel
 
+
+class ChatTurn(BaseModel):
+    role: str
+    content: str
+
 class SearchRequest(BaseModel):
     query: str
     language: str | None = None
     top_k: int = 8
     repo: str | None = None
+    history: list[ChatTurn] = []
 
 class CodeChunk(BaseModel):
     id: str

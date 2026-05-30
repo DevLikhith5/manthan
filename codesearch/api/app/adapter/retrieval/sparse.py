@@ -63,10 +63,31 @@ class BM25Index:
         tokens = self._tokenize(query)
         if not tokens:
             return []
+
+        query_lower = query.lower().replace('\\', '/')
+        path_matches = []
+        if '/' in query_lower or '.' in query_lower:
+            path_matches = [
+                chunk for chunk in self.chunks
+                if query_lower in chunk.file_path.lower().replace('\\', '/')
+            ]
+
         scores = self.bm25.get_scores(tokens)
         ranked = sorted(
             zip(scores, self.chunks),
             key=lambda x: x[0],
             reverse=True,
         )
-        return [chunk for score, chunk in ranked[:k] if score > 0]
+        bm25_results = [chunk for score, chunk in ranked if score > 0]
+
+        seen = set()
+        results = []
+        for chunk in path_matches + bm25_results:
+            if chunk.id in seen:
+                continue
+            seen.add(chunk.id)
+            results.append(chunk)
+            if len(results) >= k:
+                break
+
+        return results

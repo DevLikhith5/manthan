@@ -34,31 +34,31 @@ Manthan is a retrieval-augmented generation (RAG) system designed specifically f
 ```mermaid
 graph TB
     subgraph Frontend["Frontend Layer"]
-        UI["React SPA<br/>TypeScript + Vite + Tailwind<br/>Chat Interface | Repos | Sessions"]
+        UI["React SPA - TypeScript Vite Tailwind"]
     end
     
     subgraph API["Query Service"]
-        QueryAPI["FastAPI<br/>Hybrid Search<br/>Streaming | Sessions"]
+        QueryAPI["FastAPI - Hybrid Search"]
     end
     
-    subgraph DataLayers["Data & Storage"]
-        Qdrant["Qdrant Vector DB<br/>Dense/Sparse Vectors<br/>Named Collections"]
-        Redis["Redis<br/>Cache & Queues<br/>Session Store"]
-        Embedding["Embedding Service<br/>HuggingFace Models<br/>all-MiniLM-L6-v2"]
+    subgraph DataLayers["Data and Storage"]
+        Qdrant["Qdrant Vector DB"]
+        Redis["Redis Cache"]
+        Embedding["Embedding Service"]
     end
     
     subgraph Ingestion["Ingestion Pipeline"]
-        GoService["Go Ingestion Service<br/>Tree-Sitter AST<br/>Worker Pool"]
-        BM25["BM25 Index<br/>Sparse Search"]
+        GoService["Go Service - Tree-Sitter"]
+        BM25["BM25 Index"]
     end
     
     subgraph External["External Services"]
-        Groq["Groq API<br/>LLM Generation<br/>Token Streaming"]
+        Groq["Groq API"]
     end
     
     subgraph Observability["Monitoring"]
-        Prometheus["Prometheus<br/>Metrics Collection"]
-        Grafana["Grafana<br/>Dashboards"]
+        Prometheus["Prometheus"]
+        Grafana["Grafana"]
     end
     
     UI -->|HTTP/SSE| QueryAPI
@@ -89,12 +89,12 @@ graph TB
 
 ```mermaid
 sequenceDiagram
-    participant User as User Browser
-    participant API as FastAPI Server
-    participant Cache as Redis Cache
-    participant Embed as Embedding Service
-    participant VectorDB as Qdrant Vector DB
-    participant LLM as Groq LLM API
+    participant User
+    participant API as FastAPI
+    participant Cache as Redis
+    participant Embed as Embedding
+    participant VectorDB as Qdrant
+    participant LLM as Groq API
     
     User->>API: Natural language query
     API->>Cache: Check session history
@@ -103,32 +103,32 @@ sequenceDiagram
     API->>Embed: Embed user query
     Embed-->>API: Query embedding
     
-    Note over API,VectorDB: Hybrid search execution
-    API->>VectorDB: Dense search (vector similarity)
-    API->>VectorDB: Sparse search (BM25)
-    VectorDB-->>API: Top-K candidates
+    Note over API,VectorDB: Hybrid search
+    API->>VectorDB: Dense search
+    API->>VectorDB: Sparse search
+    VectorDB-->>API: Top-K results
     
-    API->>API: Rerank with cross-encoder
+    API->>API: Rerank results
     
-    API->>LLM: Retrieved context + query
-    LLM-->>API: Stream response tokens
+    API->>LLM: Context and query
+    LLM-->>API: Response tokens
     
-    API->>Cache: Store session & citations
-    API-->>User: Stream formatted answer
+    API->>Cache: Store session
+    API-->>User: Stream answer
 ```
 
 ### Ingestion Pipeline
 
 ```mermaid
 graph LR
-    A["Repository<br/>Git Clone"] -->|Tree-Sitter Parse| B["AST Analysis<br/>Language-Aware"]
-    B -->|Intelligent Chunking| C["Code Chunks<br/>w/ Metadata"]
-    C -->|Parallel Processing| D["HuggingFace<br/>Embeddings"]
-    D -->|Store Dense| E["Qdrant Vectors"]
-    D -->|Build Sparse| F["BM25 Index"]
-    C -->|Store Metadata| E
-    E -->|Index Ready| G["Query Ready"]
-    F -->|Query Ready| G
+    A["Repository<br/>Git Clone"] -->|Parse| B["AST Analysis"]
+    B -->|Chunking| C["Code Chunks"]
+    C -->|Process| D["HuggingFace<br/>Embeddings"]
+    D -->|Dense| E["Qdrant Vectors"]
+    D -->|Sparse| F["BM25 Index"]
+    C -->|Metadata| E
+    E -->|Ready| G["Queryable"]
+    F -->|Ready| G
     
     style A fill:#10b981,color:#fff
     style B fill:#0ea5e9,color:#fff

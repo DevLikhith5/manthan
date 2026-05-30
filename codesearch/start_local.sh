@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT_DIR="$SCRIPT_DIR"
 API_DIR="$ROOT_DIR/api"
 EMBED_DIR="$ROOT_DIR/embedding-service"
 FRONTEND_DIR="$ROOT_DIR/frontend"
@@ -48,9 +48,9 @@ stop_all() {
     echo ">>> Stopping all services..."
 
     # Kill screen sessions
-    screen -ls | grep -E 'manthan-api|manthan-embed|manthan-frontend' | awk -F. '{print $1}' | awk '{print $1}' | while read pid; do
+    screen -ls 2>/dev/null | grep -E 'manthan-api|manthan-embed|manthan-frontend' | awk -F. '{print $1}' | awk '{print $1}' | while read -r pid; do
         screen -S "$pid" -X quit 2>/dev/null || true
-    done
+    done || true
 
     # Kill any leftover uvicorn processes on our ports
     pkill -f "uvicorn app.main:app --host 0.0.0.0 --port 8000" 2>/dev/null || true

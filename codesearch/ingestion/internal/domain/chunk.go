@@ -1,5 +1,17 @@
 package domain
 
+type CallSite struct {
+	Name      string
+	Qualifier string
+	Line      int
+}
+
+type Decorator struct {
+	Name      string
+	Module    string
+	Arguments []string
+}
+
 type Chunk struct {
 	ID          string
 	Content     string
@@ -17,4 +29,11 @@ type Chunk struct {
 	Repo        string
 	CodeVec     []float32
 	DocVec      []float32
+
+	Calls      []CallSite
+	Extends    string
+	Implements []string
+	Decorators []Decorator
+	IsExported bool
+	Package    string
 }

@@ -130,10 +130,10 @@ async def ingest(body: IngestRequest):
         env['EMBEDDING_MODEL'] = settings.embedding_model
         env['QUEUE_NAME'] = f'ingestion_{safe_repo}'
         env['CONSUMER_GROUP'] = f'ingestion_workers_{safe_repo}'
-        env['WORKER_COUNT'] = '8'
+        env['WORKER_COUNT'] = '2'
         env['ONESHOT'] = 'true'
-        env['ONESHOT_TIMEOUT_SEC'] = '300'
-        env['BM25_INDEX_PATH'] = '/tmp/bm25.pkl'
+        env['ONESHOT_TIMEOUT_SEC'] = '600'
+        env['BM25_INDEX_PATH'] = settings.bm25_index_path
         env['VECTOR_DIM'] = str(settings.vector_dim)
 
         tasks[task_id] = {'status': 'indexing', 'repo': repo_name, 'logs': logs, 'lock': lock, 'done': False}

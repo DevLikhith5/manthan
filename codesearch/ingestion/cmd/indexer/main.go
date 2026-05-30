@@ -11,9 +11,11 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/cvlikhith/codesearch/ingestion/internal/adapter/embedder"
+	graphAdapter "github.com/cvlikhith/codesearch/ingestion/internal/adapter/graph"
 	"github.com/cvlikhith/codesearch/ingestion/internal/adapter/queue"
 	"github.com/cvlikhith/codesearch/ingestion/internal/adapter/store"
 	"github.com/cvlikhith/codesearch/ingestion/internal/config"
+	"github.com/cvlikhith/codesearch/ingestion/internal/domain"
 	"github.com/cvlikhith/codesearch/ingestion/internal/service"
 	"github.com/cvlikhith/codesearch/ingestion/internal/worker"
 )
@@ -35,7 +37,7 @@ func main() {
 	}
 	logger.Info("connected to redis")
 
-	qdrantStore, err := store.NewQdrant(cfg.QdrantURL)
+	qdrantStore, err := store.NewQdrant(cfg.QdrantURL, cfg.QdrantCollectionName)
 	if err != nil {
 		logger.Error("qdrant connection failed", "error", err)
 		os.Exit(1)
@@ -51,7 +53,27 @@ func main() {
 	embedClient := embedder.New(cfg.EmbeddingServiceURL, cfg.EmbeddingModel, embedCache)
 
 	bm25Store := store.NewBM25(cfg.BM25IndexPath)
-	ingestionSvc := service.NewIngestionService(cfg.RepoPath, cfg.RepoName, embedClient, qdrantStore, bm25Store, logger)
+
+	var graphRepo domain.GraphRepository
+	if cfg.EnableGraph {
+		neo4jClient, err := graphAdapter.NewNeo4jClient(graphAdapter.Neo4jConfig{
+			URI:      cfg.Neo4jURI,
+			User:     cfg.Neo4jUser,
+			Password: cfg.Neo4jPassword,
+		}, logger)
+		if err != nil {
+			logger.Error("neo4j connection failed", "error", err)
+		} else {
+			if err := neo4jClient.EnsureIndexes(context.Background()); err != nil {
+				logger.Warn("neo4j index creation failed", "error", err)
+			}
+			graphRepo = neo4jClient
+			defer neo4jClient.Close(context.Background())
+			logger.Info("neo4j connected", "uri", cfg.Neo4jURI)
+		}
+	}
+
+	ingestionSvc := service.NewIngestionService(cfg.RepoPath, cfg.RepoName, embedClient, qdrantStore, bm25Store, graphRepo, logger)
 
 	redisQueue := queue.NewRedisQueue(redisClient, cfg.QueueName, cfg.ConsumerGroup)
 	if err := redisQueue.EnsureGroup(context.Background()); err != nil {
@@ -66,7 +88,11 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go pool.Run(ctx)
+	poolDone := make(chan struct{})
+	go func() {
+		pool.Run(ctx)
+		close(poolDone)
+	}()
 
 	if cfg.Oneshot {
 		logger.Info("oneshot mode: scanning repo once and exiting")
@@ -83,22 +109,28 @@ func main() {
 						logger.Warn("oneshot timeout reached, forcing shutdown",
 							"completed", pool.Completed(), "total", count)
 						cancel()
-					case <-pool.Done():
-						cancel()
+					case <-poolDone:
 					}
 				}()
 			} else {
 				go func() {
-					<-pool.Done()
-					cancel()
+					<-poolDone
 				}()
 			}
 		} else {
 			cancel()
 		}
-	} else {
-		go gitWatcher.Run(ctx, time.Duration(cfg.PollIntervalSec)*time.Second)
+
+		<-poolDone
+
+		if err := bm25Store.Persist(); err != nil {
+			logger.Error("bm25 persist failed", "error", err)
+		}
+		logger.Info("oneshot complete")
+		return
 	}
+
+	go gitWatcher.Run(ctx, time.Duration(cfg.PollIntervalSec)*time.Second)
 
 	logger.Info("indexer started",
 		"workers", cfg.WorkerCount,

@@ -80,7 +80,7 @@ export function useSearch() {
           )
           setSearchedFiles(prev => {
             const newFiles = citations
-              .map(c => c.file.split('/').pop() || c.file)
+              .map(c => (c.path || c.file).split('/').pop() || c.path || c.file)
               .filter(f => !prev.includes(f))
             return [...prev, ...newFiles]
           })

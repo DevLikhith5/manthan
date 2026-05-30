@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/cvlikhith/codesearch/ingestion/internal/domain"
 )
@@ -17,8 +18,17 @@ type bm25Doc struct {
 }
 
 type bm25Persisted struct {
-	Corpus [][]string      `json:"corpus"`
-	Chunks []domain.Chunk  `json:"chunks"`
+	Docs []bm25Doc `json:"docs"`
+}
+
+type bm25ApiFormat struct {
+	Corpus [][]string    `json:"corpus"`
+	Chunks []domain.Chunk `json:"chunks"`
+}
+
+type posting struct {
+	DocID int
+	TF    int
 }
 
 type BM25Store struct {
@@ -27,6 +37,12 @@ type BM25Store struct {
 	avgDocLen float64
 	k1        float64
 	b         float64
+
+	inverted map[string][]posting
+	docLen   []int
+	totalLen float64
+	dirty    bool
+	mu       sync.Mutex
 }
 
 func NewBM25(indexPath string) *BM25Store {
@@ -34,6 +50,7 @@ func NewBM25(indexPath string) *BM25Store {
 		indexPath: indexPath,
 		k1:        1.5,
 		b:         0.75,
+		inverted:  map[string][]posting{},
 	}
 	s.load()
 	return s
@@ -60,33 +77,71 @@ func (b *BM25Store) load() {
 	if err := json.Unmarshal(data, &p); err != nil {
 		return
 	}
-	for i, tokens := range p.Corpus {
-		b.docs = append(b.docs, bm25Doc{Tokens: tokens, Chunk: p.Chunks[i]})
-	}
-	b.recalcAvgDocLen()
+	b.docs = p.Docs
+	b.rebuildIndex()
 }
 
-func (b *BM25Store) recalcAvgDocLen() {
+func (b *BM25Store) rebuildIndex() {
+	b.inverted = map[string][]posting{}
+	b.docLen = make([]int, len(b.docs))
+	var total float64
+	for i, d := range b.docs {
+		b.docLen[i] = len(d.Tokens)
+		total += float64(len(d.Tokens))
+		tf := map[string]int{}
+		for _, tok := range d.Tokens {
+			tf[tok]++
+		}
+		for term, cnt := range tf {
+			b.inverted[term] = append(b.inverted[term], posting{DocID: i, TF: cnt})
+		}
+	}
+	b.totalLen = total
 	if len(b.docs) == 0 {
 		b.avgDocLen = 0
-		return
+	} else {
+		b.avgDocLen = total / float64(len(b.docs))
 	}
-	var total float64
-	for _, d := range b.docs {
-		total += float64(len(d.Tokens))
+	b.dirty = false
+}
+
+func (b *BM25Store) addDocsIncremental(docs []bm25Doc) {
+	baseID := len(b.docs)
+	for _, d := range docs {
+		docID := len(b.docs)
+		b.docs = append(b.docs, d)
+		b.docLen = append(b.docLen, len(d.Tokens))
+		b.totalLen += float64(len(d.Tokens))
+		tf := map[string]int{}
+		for _, tok := range d.Tokens {
+			tf[tok]++
+		}
+		_ = docID
+		_ = baseID
+		for term, cnt := range tf {
+			b.inverted[term] = append(b.inverted[term], posting{DocID: len(b.docs) - 1, TF: cnt})
+		}
 	}
-	b.avgDocLen = total / float64(len(b.docs))
+	if len(b.docs) > 0 {
+		b.avgDocLen = b.totalLen / float64(len(b.docs))
+	}
+	b.dirty = true
 }
 
 func (b *BM25Store) Add(ctx context.Context, chunks []domain.Chunk) error {
-	for _, c := range chunks {
-		b.docs = append(b.docs, bm25Doc{Tokens: tokenize(c.Content), Chunk: c})
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	docs := make([]bm25Doc, len(chunks))
+	for i, c := range chunks {
+		docs[i] = bm25Doc{Tokens: tokenize(c.Content), Chunk: c}
 	}
-	b.recalcAvgDocLen()
+	b.addDocsIncremental(docs)
 	return nil
 }
 
 func (b *BM25Store) Remove(ctx context.Context, filePath string) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	filtered := make([]bm25Doc, 0, len(b.docs))
 	for _, d := range b.docs {
 		if d.Chunk.FilePath != filePath {
@@ -94,22 +149,14 @@ func (b *BM25Store) Remove(ctx context.Context, filePath string) error {
 		}
 	}
 	b.docs = filtered
-	b.recalcAvgDocLen()
+	b.rebuildIndex()
 	return nil
 }
 
 func (b *BM25Store) Persist() error {
-	if len(b.docs) == 0 {
-		return nil
-	}
-	p := bm25Persisted{
-		Corpus: make([][]string, len(b.docs)),
-		Chunks: make([]domain.Chunk, len(b.docs)),
-	}
-	for i, d := range b.docs {
-		p.Corpus[i] = d.Tokens
-		p.Chunks[i] = d.Chunk
-	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	p := bm25Persisted{Docs: b.docs}
 	data, err := json.Marshal(p)
 	if err != nil {
 		return err
@@ -122,64 +169,49 @@ func (b *BM25Store) Search(query string, k int) []domain.Chunk {
 		return nil
 	}
 	qTokens := tokenize(query)
-	if len(qTokens) == 0 {
+	if len(qTokens) == 0 || b.avgDocLen == 0 {
 		return nil
 	}
 
 	n := float64(len(b.docs))
-	idfCache := make(map[string]float64)
-	for _, t := range qTokens {
-		if _, ok := idfCache[t]; ok {
+	scoreByDoc := map[int]float64{}
+	seenQueryTerms := map[string]struct{}{}
+
+	for _, term := range qTokens {
+		if _, ok := seenQueryTerms[term]; ok {
 			continue
 		}
-		var df float64
-		for _, d := range b.docs {
-			for _, dt := range d.Tokens {
-				if dt == t {
-					df++
-					break
-				}
-			}
+		seenQueryTerms[term] = struct{}{}
+		postings := b.inverted[term]
+		if len(postings) == 0 {
+			continue
 		}
-		idfCache[t] = math.Log(1 + (n-df+0.5)/(df+0.5))
+		df := float64(len(postings))
+		idf := math.Log(1 + (n-df+0.5)/(df+0.5))
+		for _, p := range postings {
+			docLen := float64(b.docLen[p.DocID])
+			tf := float64(p.TF)
+			scoreByDoc[p.DocID] += idf * (tf * (b.k1 + 1)) / (tf + b.k1*(1-b.b+b.b*docLen/b.avgDocLen))
+		}
 	}
 
 	type scored struct {
-		idx   int
+		docID  int
 		score float64
 	}
-	scores := make([]scored, 0, len(b.docs))
-	for i, d := range b.docs {
-		docLen := float64(len(d.Tokens))
-		var s float64
-		for _, qt := range qTokens {
-			var tf float64
-			for _, dt := range d.Tokens {
-				if dt == qt {
-					tf++
-				}
-			}
-			if tf == 0 {
-				continue
-			}
-			idf := idfCache[qt]
-			s += idf * (tf * (b.k1 + 1)) / (tf + b.k1*(1-b.b+b.b*docLen/b.avgDocLen))
-		}
-		if s > 0 {
-			scores = append(scores, scored{idx: i, score: s})
+	ranked := make([]scored, 0, len(scoreByDoc))
+	for docID, score := range scoreByDoc {
+		if score > 0 {
+			ranked = append(ranked, scored{docID: docID, score: score})
 		}
 	}
-
-	sort.Slice(scores, func(i, j int) bool {
-		return scores[i].score > scores[j].score
-	})
-
-	if k > len(scores) {
-		k = len(scores)
+	sort.Slice(ranked, func(i, j int) bool { return ranked[i].score > ranked[j].score })
+	if k > len(ranked) {
+		k = len(ranked)
 	}
-	results := make([]domain.Chunk, k)
+	out := make([]domain.Chunk, k)
 	for i := 0; i < k; i++ {
-		results[i] = b.docs[scores[i].idx].Chunk
+		out[i] = b.docs[ranked[i].docID].Chunk
 	}
-	return results
+	return out
 }

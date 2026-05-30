@@ -10,7 +10,7 @@ BUILD_PLAN.md
 ingestion/indexer
 ingestion/*.exe
 *.exe
-
+GRAPH_PLAN.md
 # Python
 __pycache__/
 *.py[cod]

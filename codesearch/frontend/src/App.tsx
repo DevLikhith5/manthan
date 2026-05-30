@@ -7,11 +7,13 @@ import ChatSidebar from './components/ChatSidebar'
 import RepositoriesPage from './components/RepositoriesPage'
 import AddRepoView from './components/AddRepoView'
 import ThemeToggle from './components/ThemeToggle'
+import WikiLayout from './components/WikiLayout'
 
 function App() {
   const {
     messages, status, progress, expandedQueries, searchedFiles, error,
     sessions, currentId, selectedRepo, tab,
+    retrievalConfidence, answerMode, confidenceReason, sourceBreakdown, queryIntent,
     search, switchSession, newChat, deleteSession, setTab, dispatch,
   } = useChatStore()
   const [scrolled, setScrolled] = useState(false)
@@ -49,6 +51,7 @@ function App() {
       if (mod && e.key === 'n') { e.preventDefault(); newChat() }
       else if (mod && e.key === '1') { e.preventDefault(); setShowAddRepo(false); setTab('search') }
       else if (mod && e.key === '2') { e.preventDefault(); setShowAddRepo(false); setTab('repos') }
+      else if (mod && e.key === '3') { e.preventDefault(); setShowAddRepo(false); setTab('wiki') }
       else if (e.key === 'Escape' && showSources) { setShowSources(false) }
       else if (e.key === '?' && !mod) { e.preventDefault(); setShowShortcuts(s => !s) }
       else if (mod && e.key === 'b') { e.preventDefault(); setSidebarOpen(s => !s) }
@@ -108,7 +111,7 @@ function App() {
                   </svg>
                 </button>
               )}
-              {(['search', 'repos'] as const).map(t => (
+              {(['search', 'repos', 'wiki'] as const).map(t => (
                 <button
                   key={t}
                   onClick={() => { if (t !== tab) { setShowAddRepo(false); setTab(t) } }}
@@ -118,7 +121,7 @@ function App() {
                       : 'text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300'
                   }`}
                 >
-                  {t === 'search' ? (messages.length > 0 ? 'Chat' : 'Search') : 'Repos'}
+                  {t === 'search' ? (messages.length > 0 ? 'Chat' : 'Search') : t === 'repos' ? 'Repos' : 'Wiki'}
                 </button>
               ))}
             </div>
@@ -151,6 +154,10 @@ function App() {
               />
             )}
 
+            {tab === 'wiki' && !showAddRepo && (
+              <WikiLayout repo={selectedRepo || (repos[0] || '')} />
+            )}
+
             {tab === 'search' && !chatHasContent && !showAddRepo && (
               <div className="flex-1 flex items-center justify-center w-full max-w-2xl">
                 <div className="w-full text-center">
@@ -176,7 +183,7 @@ function App() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                {(isStreaming || progress) && (
+                {(isStreaming || progress || (!isStreaming && retrievalConfidence !== null)) && (
                   <div className="mb-2 flex-shrink-0 animate-scale-in">
                     <div className="flex items-center gap-2.5 mb-2 px-1">
                       <div className="flex gap-1">
@@ -205,6 +212,31 @@ function App() {
                         ))}
                       </div>
                     )}
+                    {retrievalConfidence !== null && (
+                      <div className="mt-2 px-3 py-2 rounded-2xl border border-stone-200/80 bg-white/90 dark:border-stone-800/80 dark:bg-stone-950/80 text-xs text-stone-600 dark:text-stone-300">
+                        <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500 dark:text-stone-400">
+                          <span>{answerMode === 'low_confidence' ? 'Low confidence' : 'High confidence'}</span>
+                          <span>Retrieval {Math.round(retrievalConfidence * 100)}%</span>
+                          {queryIntent && (
+                            <span className="px-2 py-0.5 rounded-full bg-stone-200/80 dark:bg-stone-700/80 text-[10px] normal-case tracking-normal">
+                              {queryIntent}
+                            </span>
+                          )}
+                        </div>
+                        {confidenceReason.length > 0 && (
+                          <div className="mt-1 text-[11px] text-stone-500 dark:text-stone-400">Reasons: {confidenceReason.join(', ')}</div>
+                        )}
+                        {sourceBreakdown && Object.keys(sourceBreakdown).length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {Object.entries(sourceBreakdown).map(([key, value]) => (
+                              <span key={key} className="rounded-full bg-stone-100 dark:bg-stone-800 px-2 py-0.5 text-[11px] text-stone-500 dark:text-stone-300">
+                                {key.replace(/_/g, ' ')}: {value}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -230,22 +262,22 @@ function App() {
       </div>
 
       {tab === 'search' && lastAssistantMessage?.citations && lastAssistantMessage.citations.length > 0 && !lastAssistantMessage.isStreaming && (
-        <aside className={`hidden lg:flex flex-col fixed top-14 right-0 bg-stone-50/80 dark:bg-stone-900/50 border-l border-stone-150 dark:border-stone-800 rounded-l-xl overflow-hidden transition-all duration-300 ease-in-out z-20 ${showSources ? 'w-80' : 'w-0 border-l-0'}`} style={{ height: 'calc(100vh - 56px)' }}>
+        <aside className={`hidden lg:flex flex-col fixed top-14 right-0 bg-white dark:bg-[#0a0a0c] border-l border-gray-200 dark:border-gray-800 overflow-hidden transition-all duration-300 ease-in-out z-20 ${showSources ? 'w-72' : 'w-0 border-l-0'}`} style={{ height: 'calc(100vh - 56px)' }}>
           <div className="flex-1 w-full flex flex-col min-h-0">
-            <div className="px-4 h-12 border-b border-stone-150 dark:border-stone-800 flex items-center gap-2 bg-stone-100/50 dark:bg-stone-800/30 flex-shrink-0">
-              <span className="text-xs font-medium text-stone-400 dark:text-stone-500 uppercase tracking-widest">Sources</span>
-              <span className="text-[11px] text-stone-300 dark:text-stone-600 font-mono bg-stone-200/60 dark:bg-stone-700/60 px-1.5 py-0.5 rounded">{lastAssistantMessage.citations.length}</span>
+            <div className="px-4 h-10 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2 flex-shrink-0">
+              <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">Sources</span>
+              <span className="text-[10px] text-gray-400 dark:text-gray-600 font-mono">{lastAssistantMessage.citations.length}</span>
               <button
                 onClick={() => setShowSources(false)}
-                className="ml-auto p-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                className="ml-auto p-0.5 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors"
                 title="Close sources"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto min-h-0 p-4">
+            <div className="flex-1 overflow-y-auto min-h-0 p-2.5">
               <CitationsPanel citations={lastAssistantMessage.citations} />
             </div>
           </div>

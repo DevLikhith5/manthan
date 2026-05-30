@@ -21,7 +21,7 @@ async def resolve_chunk_ids(expected_files: list[str]) -> list[str]:
     next_offset = None
     while True:
         points, next_offset = await qdrant.scroll(
-            collection_name='codebase',
+            collection_name=settings.qdrant_collection_name,
             limit=1000,
             offset=next_offset,
             with_payload=['file_path', 'function_name'],

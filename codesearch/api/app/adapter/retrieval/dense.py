@@ -54,7 +54,7 @@ async def dense_search(
     query_vec = await embed_query(query)
 
     results = await qdrant.search(
-        collection_name='codebase',
+        collection_name=settings.qdrant_collection_name,
         query_vector=(vector_name, query_vec),
         query_filter=_build_filter(language, repo),
         limit=k,
@@ -78,3 +78,50 @@ async def dense_search(
         )
         for r in results
     ]
+
+
+async def hyde_search(
+    hypothetical_doc: str,
+    k: int = 30,
+    language: str | None = None,
+    repo: str | None = None,
+) -> list[CodeChunk]:
+    """Search using hypothetical document embedding (HyDE).
+    
+    HyDE treats the hypothetical answer as a query for retrieval.
+    Returns results with slightly lower weight than dense_search to avoid
+    overweighting the hypothetical document signal.
+    """
+    if not hypothetical_doc or len(hypothetical_doc.strip()) < 10:
+        return []
+    
+    try:
+        query_vec = await embed_query(hypothetical_doc)
+        results = await qdrant.search(
+            collection_name=settings.qdrant_collection_name,
+            query_vector=('code', query_vec),  # Use code vector for documents
+            query_filter=_build_filter(language, repo),
+            limit=k,
+            with_payload=True,
+            with_vectors=False,
+        )
+        
+        return [
+            CodeChunk(
+                id=str(r.id),
+                score=r.score * 0.85,  # Down-weight HyDE results slightly
+                content=r.payload.get('content', ''),
+                file_path=r.payload.get('file_path', ''),
+                function_name=r.payload.get('function_name', ''),
+                start_line=r.payload.get('start_line', 0),
+                end_line=r.payload.get('end_line', 0),
+                language=r.payload.get('language', ''),
+                signature=r.payload.get('signature', ''),
+                parent_class=r.payload.get('parent_class', ''),
+                repo=r.payload.get('repo', ''),
+            )
+            for r in results
+        ]
+    except Exception:
+        # Graceful degradation: if HyDE search fails, just return empty
+        return []
